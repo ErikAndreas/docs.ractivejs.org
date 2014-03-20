@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+
+	<link rel="icon" type="image/png" href="../favicon.png">
+
+	<title>References | Docs | Ractive.js</title>
+
+	
+	<link href="http://fonts.googleapis.com/css?family=Source+Code+Pro:400,700,900" rel="stylesheet" type="text/css">
+	<link rel="stylesheet" href="../min.css"></head>
+
+<body class="example"><header class="docs-header"><nav><a href="http://ractivejs.org">&laquo; back to ractivejs.org</a>
+			<a class="edit-link" href="https://github.com/RactiveJS/docs.ractivejs.org/edit/master/docs/0.3.9/References.md"><span>edit this page</span></a></nav>
+
+		<h1>References</h1></header>
+
+	<main><div class="breadcrumbs"><a href="ractive-js-documentation">Home</a> &raquo; <a href="glossary">Glossary</a> &raquo; <a href="references">References</a></div>
+
+<p>Within this documentation, and within Ractive&#39;s code, a <em>reference</em> is a string that refers to a piece of data &ndash; in other words, within a <code>{{name}}</code> <a href="mustaches">mustache</a>, <code>name</code> is the reference.</p>
+<p>By themselves, references are useless &ndash; they must <em>resolve</em> to a <em><a href="keypaths">keypath</a></em> before we can do anything with them (like render their value). If the reference exists with a section mustache, it may need to be resolved <em>in the context of that section</em>. In fact, because sections can be nested, we have to resolve each reference within its <em>context stack</em>.</p>
+<p>The resolution algorithm looks like this:</p>
+<ol>
+<li>If the context stack is empty, skip to (6).</li>
+<li>Find the innermost context on the current context stack.</li>
+<li>See if the keypath which is <code>context + &#39;.&#39; + reference</code> points to a value</li>
+<li>If so, resolve with that keypath</li>
+<li>Otherwise, remove the innermost context from the stack. Repeat (1-5).</li>
+<li>See if <code>reference</code> is a valid keypath by itself. If so, resolve.</li>
+<li>If we couldn&#39;t resolve the reference, add it to the &#39;pending resolution&#39; pile. Each time the data changes, repeat steps (1-7).</li>
+</ol>
+<h2 id="huh-">Huh?</h2>
+<p>That&#39;s a little bit abstract. The following example may help explain:</p>
+<pre class="prettyprint lang-html">{{#user}}
+  &lt;p&gt;Welcome back, {{name}}!
+    {{#messages}}
+      You have {{unread}} unread of {{total}} total messages.
+      You last logged in on {{lastLogin}}.
+    {{/messages}}
+  &lt;/p&gt;
+{{/user}}</pre>
+
+<pre class="prettyprint lang-js">ractive = new Ractive({
+  el: container,
+  template: myTemplate,
+  data: {
+    user: {
+      name: 'Jim',
+      messages: {
+        total: 10,
+        unread: 3
+      },
+      lastLogin: 'Wednesday'
+    }
+  }
+});</pre>
+
+<p>We start with an empty context stack, so to resolve the <code>user</code> in <code>{{#user}}</code> we skip ahead to step 6 of the algorithm. Is <code>user</code> a valid keypath &ndash; i.e. does <code>ractive.data</code> have a <code>user</code> property? Why yes, it does.</p>
+<p>Within the <code>{{#user}}</code> section, <code>user</code> is a context. So we now have a non-empty context stack &ndash; <code>[&#39;user&#39;]</code>. So when we come to resolve the <code>name</code> in <code>{{name}}</code>, we go to step 2. The innermost (and only) context is <code>user</code>, so we test the keypath <code>user.name</code>. Is it valid? Why yes, it is. So the <code>name</code> resolves to <code>user.name</code>.</p>
+<p>Next up, <code>{{#messages}}</code>. The innermost context is still <code>user</code>, so we test <code>user.messages</code> &ndash; bingo. Because it&#39;s a section mustache, anything inside it now has a two-level context stack (<code>[&#39;user&#39;, &#39;user.messages&#39;]</code>).</p>
+<p>We take <code>{{unread}}</code> and <code>{{total}}</code> and apply the same algorithm &ndash; sure enough, they resolve to <code>user.messages.unread</code> and <code>user.messages.total</code>.</p>
+<p>What about <code>{{lastLogin}}</code>? Again, we take the innermost context from the stack &ndash; <code>user.messages</code>. Is <code>user.messages.lastLogin</code> a valid keypath? No, it isn&#39;t. So we take the next innermost context &ndash; <code>user</code>. As it turns out, <code>user.lastLogin</code> is a valid keypath, so the reference resolves.</p>
+<p>Most of the time you don&#39;t need to be aware that this is going on, especially if you&#39;re already familiar with <a href="mustaches">Mustache</a>, but it&#39;s useful to have a background understanding.</p>
+<h2 id="lists">Lists</h2>
+<p>This is also how list sections work. Consider the following:</p>
+<pre class="prettyprint lang-html">{{#items}}
+  {{content}}
+{{/items}}</pre>
+
+<pre class="prettyprint lang-js">ractive = new Ractive({
+  el: container,
+  template: myTemplate,
+  data: {
+    items: [{ content: 'zero' }, { content: 'one' }, { content: 'two' }]
+  }
+});</pre>
+
+<p>The contents of the <code>{{#items}}</code> section are rendered once for each member of <code>items</code>. Each time round, the context changes &ndash; the first time it is <code>items.0</code>, then it is <code>items.1</code>, then it is <code>items.2</code>.</p>
+<p>With a context of <code>items.0</code>, the <code>content</code> reference resolves to <code>items.0.content</code>, and so on.</p>
+<h2 id="the-implicit-iterator-">The implicit iterator &ndash; <code>{{.}}</code></h2>
+<p>Sometimes you will have lists of primitives (i.e. strings and numbers) rather than objects. To refer to the primitives, we must use the <em>implicit iterator</em>:</p>
+<pre class="prettyprint lang-html">{{#items}}
+  {{.}}
+{{/items}}</pre>
+
+<pre class="prettyprint lang-js">ractive = new Ractive({
+  el: container,
+  template: myTemplate,
+  data: {
+    items: [ 'zero', 'one', 'two' ]
+  }
+});</pre>
+
+<p>Whenever Ractive sees <code>{{.}}</code>, it simply resolves it to the innermost context &ndash; <code>items.0</code>, <code>items.1</code>, <code>items.2</code>.</p>
+<p>In Ractive (but not Mustache), you can use <code>{{this}}</code> in place of <code>{{.}}</code>. This is because it looks better in expressions &ndash; <code>{{this.toFixed(1)}}</code> looks much nicer than <code>{{..toFixed(1)}}</code> (for example).</p>
+<h2 id="restricted-references">Restricted references</h2>
+<p>Sometimes you may want to reference a property within the current context regardless of whether that property currently exists. For those situations you can use what&#39;s called a <em>restricted reference</em> (note that this feature does not exist in vanilla Mustache):</p>
+<pre class="prettyprint lang-html">{{#options}}
+  &lt;label&gt;&lt;input type='checkbox' value='{{.selected}}'&gt; {{description}}&lt;/label&gt;
+{{/options}}</pre>
+
+<p>This feature is particularly useful with <a href="two-way-binding">two-way binding</a> as these references have to be resolved immediately.</p>
+</main>
+
+	
+	<script src="../js/prettify.js"></script>
+	<script>prettyPrint();
+
+		// Googlytics
+		(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+		ga('create', 'UA-5602942-6', 'ractivejs.org');
+		ga('send', 'pageview');</script></body></html>

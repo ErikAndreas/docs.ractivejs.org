@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+
+	<link rel="icon" type="image/png" href="../favicon.png">
+
+	<title>ractive.nodes | Docs | Ractive.js</title>
+
+	
+	<link href="http://fonts.googleapis.com/css?family=Source+Code+Pro:400,700,900" rel="stylesheet" type="text/css">
+	<link rel="stylesheet" href="../min.css"></head>
+
+<body class="example"><header class="docs-header"><nav><a href="http://ractivejs.org">&laquo; back to ractivejs.org</a>
+			<a class="edit-link" href="https://github.com/RactiveJS/docs.ractivejs.org/edit/master/docs/0.3.9/ractive.nodes.md"><span>edit this page</span></a></nav>
+
+		<h1>ractive.nodes</h1></header>
+
+	<main><div class="breadcrumbs"><a href="ractive-js-documentation">Home</a> &raquo; <a href="api-reference">API reference</a> &raquo; <a href="ractive-nodes">ractive.nodes</a></div>
+
+<p>Each Ractive instance has a <code>nodes</code> property, which is a hash of all the elements within a Ractive that have an <code>id</code> attribute:</p>
+<pre class="prettyprint lang-html">&lt;div id='myDiv'&gt;An unimaginatively named div.&lt;/div&gt;</pre>
+
+<pre class="prettyprint lang-js">ractive = new Ractive({
+  el: myContainer,
+  template: myTemplate
+});
+
+// this will alert 'true'
+alert( ractive.nodes.myDiv === document.getElementById( 'myDiv' ) );</pre>
+
+<p>This can save you having to store references to elements, or doing repeated calls to <code>document.getElementById()</code> (or the jQuery equivalent, etc).</p>
+<p>You can, if you&#39;re so inclined, use dynamic attributes, like so:</p>
+<pre class="prettyprint lang-html">&lt;ul&gt;
+  {{#items:i}}
+    &lt;li id='item_{{i}}'&gt;{{content}}&lt;/li&gt;
+  {{/items}}
+&lt;/ul&gt;</pre>
+
+<pre class="prettyprint lang-js">ractive = new Ractive({
+  el: myContainer,
+  template: myTemplate,
+  data: { items: myListOfItems }
+});
+
+// to get reference to an arbitrary li element...
+li = ractive.nodes[ 'item_' + num ];</pre>
+</main>
+
+	
+	<script src="../js/prettify.js"></script>
+	<script>prettyPrint();
+
+		// Googlytics
+		(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+		ga('create', 'UA-5602942-6', 'ractivejs.org');
+		ga('send', 'pageview');</script></body></html>

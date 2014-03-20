@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+
+	<link rel="icon" type="image/png" href="../favicon.png">
+
+	<title>ractive.transitions (instance) | Docs | Ractive.js</title>
+
+	
+	<link href="http://fonts.googleapis.com/css?family=Source+Code+Pro:400,700,900" rel="stylesheet" type="text/css">
+	<link rel="stylesheet" href="../min.css"></head>
+
+<body class="example"><header class="docs-header"><nav><a href="http://ractivejs.org">&laquo; back to ractivejs.org</a>
+			<a class="edit-link" href="https://github.com/RactiveJS/docs.ractivejs.org/edit/master/docs/0.3.9/ractive.transitions (instance).md"><span>edit this page</span></a></nav>
+
+		<h1>ractive.transitions (instance)</h1></header>
+
+	<main><div class="breadcrumbs"><a href="ractive-js-documentation">Home</a> &raquo; <a href="api-reference">API reference</a> &raquo; <a href="ractive-transitions-instance">ractive.transitions</a></div>
+
+<p>Each Ractive instance has a <code>transitions</code> property, which contains <a href="transitions">transition functions</a> specific to that instance.</p>
+<p>When an element with a specified <code>intro</code> or <code>outro</code> transition is added or removed, Ractive first looks at <code>ractive.transitions</code> to see if it can find the right transition function. If it fails, it then looks in <code>Ractive.transitions</code> (the <a href="ractive-transitions-global">global transitions registry</a>).</p>
+<p>Ordinarily, transitions are added to a Ractive instance as an <a href="initialisation-options">initialisation option</a>, but it is possible to swap them out after initialisation (for example, if your app determines that the user&#39;s browser can&#39;t handle a particular transition, or due to a configuration change).</p>
+</main>
+
+	
+	<script src="../js/prettify.js"></script>
+	<script>prettyPrint();
+
+		// Googlytics
+		(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+		ga('create', 'UA-5602942-6', 'ractivejs.org');
+		ga('send', 'pageview');</script></body></html>

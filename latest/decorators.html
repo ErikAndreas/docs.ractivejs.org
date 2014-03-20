@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+
+	<link rel="icon" type="image/png" href="../favicon.png">
+
+	<title>Decorators | Docs | Ractive.js</title>
+
+	
+	<link href="http://fonts.googleapis.com/css?family=Source+Code+Pro:400,700,900" rel="stylesheet" type="text/css">
+	<link rel="stylesheet" href="../min.css"></head>
+
+<body class="example"><header class="docs-header"><nav><a href="http://ractivejs.org">&laquo; back to ractivejs.org</a>
+			<a class="edit-link" href="https://github.com/RactiveJS/docs.ractivejs.org/edit/master/docs/0.3.9/Decorators.md"><span>edit this page</span></a></nav>
+
+		<h1>Decorators</h1></header>
+
+	<main><div class="breadcrumbs"><a href="ractive-js-documentation">Home</a> &raquo; <a href="plugins">Plugins</a> &raquo; <a href="decorators">Decorators</a></div>
+
+<p>A decorator is a simple way to add behaviour to a node when it is rendered, or to augment it in some way. Decorators are a good way to teach Ractive tricks from other libraries, such as <a href="http://jqueryui.com/">jQuery UI</a>.</p>
+<p>You can use existing decorators from the <a href="plugins">Plugins</a> page, or you can easily create your own.</p>
+<h2 id="creating-a-decorator">Creating a decorator</h2>
+<p>For this example we&#39;ll create a tooltip decorator. For the impatient, you can see the <a href="http://jsfiddle.net/rich_harris/9g3pB/">finished result in this JSFiddle</a>.</p>
+<p>Firstly, we need to add the <code>decorator</code> <em>directive</em> to any nodes that the decorator should apply to:</p>
+<pre class="prettyprint lang-html">&lt;p&gt;This text contains &lt;span decorator='tooltip:This is a tooltip'&gt;tooltips&lt;/span&gt;.&lt;/p&gt;</pre>
+
+<p>(Directives are just instructions to Ractive &ndash; they don&#39;t actually get added to the element as attributes.)</p>
+<p>Now, the <code>tooltip</code> decorator function will be called when the <code>&lt;span&gt;</code> is added to the DOM. The first argument to the function is the <code>&lt;span&gt;</code> itself; subsequent arguments given after the <code>:</code> in the directive will be passed to the function &ndash; in this case, there will be a second argument, which is the &#39;This is a tooltip&#39; message.</p>
+<p>Within that function, we can do whatever we like &ndash; the only rule is that it must return an object with a <code>teardown()</code> method that gets called if the <code>&lt;span&gt;</code> is removed from the DOM:</p>
+<pre class="prettyprint lang-js">var tooltipDecorator = function ( node, content ) {
+  // setup work goes here...
+
+  return {
+    teardown: function () {
+      // ...any cleanup work goes here
+    }
+  };
+};</pre>
+
+<p>There are a couple of ways to make the decorator available to Ractive:</p>
+<pre class="prettyprint lang-js">// decorator is available to all Ractive instances
+Ractive.decorators.tooltip = tooltipDecorator;
+
+// decorator is available to a single Ractive instance:
+ractive = new Ractive({
+  el: 'body',
+  template: template,
+  decorators: {
+    tooltip: tooltipDecorator
+  }
+});
+
+// decorator is available to all instances of e.g. RactiveWithTooltip:
+RactiveWithTooltip = Ractive.extend({
+  decorators: {
+    tooltip: tooltipDecorator
+  }
+});</pre>
+
+
+<h2 id="adding-the-logic">Adding the logic</h2>
+<p>So far, we&#39;ve got a decorator that doesn&#39;t actually do anything. Let&#39;s fix that.</p>
+<pre class="prettyprint lang-js">var tooltipDecorator = function ( node, content ) {
+  var tooltip, handlers, eventName;
+
+  // Create some event handlers. NB we can use addEventListener
+  // with impunity, even in old IE, by using a legacy build:
+  // https://docs.ractivejs.org/latest/Legacy-builds
+  handlers = {
+    mouseover: function () {
+      // Create a tooltip...
+      tooltip = document.createElement( 'p' );
+      tooltip.className = 'ractive-tooltip';
+      tooltip.textContent = content;
+
+      // ...and insert it before the node
+      node.parentNode.insertBefore( tooltip, node );
+    },
+
+    mousemove: function ( event ) {
+      // Keep the tooltip near where the mouse is
+      tooltip.style.left = event.clientX + 'px';
+      tooltip.style.top = ( event.clientY &ndash; tooltip.clientHeight &ndash; 20 ) + 'px';
+    },
+
+    mouseleave: function () {
+      // Destroy the tooltip when the mouse leaves the node
+      tooltip.parentNode.removeChild( tooltip );
+    }
+  };
+
+  // Add event handlers to the node
+  for ( eventName in handlers ) {
+    if ( handlers.hasOwnProperty( eventName ) ) {
+      node.addEventListener( eventName, handlers[ eventName ], false );
+    }
+  }
+
+  // Return an object with a `teardown()` method that removes the
+  // event handlers when we no longer need them
+  return {
+    teardown: function () {
+      for ( eventName in handlers ) {
+        if ( handlers.hasOwnProperty( eventName ) ) {
+          node.removeEventListener( eventName, handlers[ eventName ], false );
+        }
+      }
+    }
+  };
+};</pre>
+
+<p>We&#39;ll need to add some CSS to complete the effect:</p>
+<pre class="prettyprint lang-css">.ractive-tooltip {
+  display: block;
+  position: fixed;
+  max-width: 300px;
+  background-color: #f4f4f4;
+  border: 1px solid #eee;
+  box-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+  padding: 0.5em;
+  font-size: 0.8em;
+}</pre>
+
+
+<h2 id="adding-parameters">Adding parameters</h2>
+<p>But wait &ndash; what if we don&#39;t want to use the <code>ractive-tooltip</code> class name? In fact, come to mention it, there&#39;s a whole load of hard-coded assumptions in there.</p>
+<p>There are two ways we could address this. Firstly, we could add a whole load of additional arguments to the decorator directive:</p>
+<pre class="prettyprint lang-html">&lt;span decorator='tooltip:"This is a tooltip","p","tooltips-ftw",0,-20'&gt;tooltips&lt;/span&gt;</pre>
+
+<pre class="prettyprint lang-js">tooltipDecorator = function ( node, content, elementName, className, offsetX, offsetY ) {
+  /* ... */
+};</pre>
+
+<p>That gives you lots of flexibility but it&#39;s pretty verbose.</p>
+<p>Luckily there&#39;s another way. Because, in JavaScript, functions are also objects, we can add properties to the decorator function itself, like so:</p>
+<pre class="prettyprint lang-js">tooltipDecorator = function ( node, content ) {
+  /*
+    Instead of...
+
+      tooltip = document.createElement( 'p' );
+      tooltip.className = 'ractive-tooltip';
+
+    ...we do
+
+      tooltip = document.createElement( tooltipDecorator.elementName );
+      tooltip.className = tooltipDecorator.className;
+  */
+};
+
+// Default parameters
+tooltipDecorator.elementName = 'p';
+tooltipDecorator.className = 'ractive-tooltip';
+tooltipDecorator.offsetX = 0;
+tooltipDecorator.offsetX = -20;
+
+Ractive.decorators.tooltip = tooltipDecorator;
+
+// Later, a developer using the tooltip decorator can customise it, e.g.
+Ractive.decorators.tooltip.className = 'tooltips-ftw';</pre>
+
+
+<h2 id="sharing-your-decorators">Sharing your decorators</h2>
+<p>If you create a decorator that you find useful, other developers probably will too. Share it! An easy way to get started is to use the <a href="https://github.com/RactiveJS/Plugin-template">plugin template</a>, which uses <a href="http://gruntjs.com">Grunt</a> and walks you through the steps necessary to create a plugin with a demo page.</p>
+<p>Once you&#39;re ready to share it with the world, ping <a href="http://twitter.com/RactiveJS">@RactiveJS</a> on Twitter. Thanks!</p>
+</main>
+
+	
+	<script src="../js/prettify.js"></script>
+	<script>prettyPrint();
+
+		// Googlytics
+		(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+		ga('create', 'UA-5602942-6', 'ractivejs.org');
+		ga('send', 'pageview');</script></body></html>

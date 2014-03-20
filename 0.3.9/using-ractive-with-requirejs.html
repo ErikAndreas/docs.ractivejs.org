@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+
+	<link rel="icon" type="image/png" href="../favicon.png">
+
+	<title>Using Ractive with RequireJS | Docs | Ractive.js</title>
+
+	
+	<link href="http://fonts.googleapis.com/css?family=Source+Code+Pro:400,700,900" rel="stylesheet" type="text/css">
+	<link rel="stylesheet" href="../min.css"></head>
+
+<body class="example"><header class="docs-header"><nav><a href="http://ractivejs.org">&laquo; back to ractivejs.org</a>
+			<a class="edit-link" href="https://github.com/RactiveJS/docs.ractivejs.org/edit/master/docs/0.3.9/Using Ractive with RequireJS.md"><span>edit this page</span></a></nav>
+
+		<h1>Using Ractive with RequireJS</h1></header>
+
+	<main><div class="breadcrumbs"><a href="ractive-js-documentation">Home</a> &raquo; <a href="tips">Tips</a> &raquo; <a href="using-ractive-with-requirejs">Using Ractive with RequireJS</a></div>
+
+<p><em>Psst! Looking for the <a href="https://github.com/RactiveJS/requirejs-ractive/tree/master/sample">Ractive + RequireJS sample application</a>?</em></p>
+<p>If Ractive detects that you&#39;re using an <a href="https://github.com/amdjs/amdjs-api/wiki/AMD">AMD</a> module loader (in other words, if <code>typeof define !== &#39;undefined&#39; &amp;&amp; define.amd</code>) such as <a href="http://requirejs.org/">RequireJS</a>, it will register itself as an AMD module rather than as a browser global.</p>
+<p>You&#39;d then use Ractive the same as you&#39;d use any other module, such as in this (contrived, oversimple) example:</p>
+<pre class="prettyprint lang-js">// define our main application, with an 'init' method to call when
+// the DOM is ready etc
+define([ 'jquery', 'Ractive' ], function ( $, Ractive ) {
+
+  'use strict';
+
+  var app = {
+    init: function () {
+
+      // load our template with jQuery AJAX
+      $.ajax( 'templates/main.html' ).then( function ( mainTemplate ) {
+
+        // render our main view
+        this.mainView = new Ractive({
+          el: 'container',
+          template: mainTemplate
+        });
+      });
+    }
+  };
+
+  return app;
+
+});</pre>
+
+<h2 id="loading-templates-without-ajax">Loading templates without AJAX</h2>
+<p>We can do one better than that. Rather than stuffing our code full of asynchronous logic, we can use AMD to do the donkey work for us.</p>
+<p>Include the <a href="https://github.com/requirejs/text">RequireJS text loader plugin</a> in the root of your project (or whatever you&#39;ve specified as the RequireJS <code>baseUrl</code>) &ndash; you can now do this (note we no longer require jQuery):</p>
+<pre class="prettyprint lang-js">// define our main application, with an 'init' method to call when
+// the DOM is ready etc
+define([ 'Ractive', 'text!templates/main.html' ], function ( Ractive, mainTemplate ) {
+
+  'use strict';
+
+  var app = {
+    init: function () {
+
+      // render our main view
+      this.mainView = new Ractive({
+        el: 'container',
+        template: mainTemplate
+      });
+    }
+  };
+
+  return app;
+
+});</pre>
+
+<p>But we can do even better. If you use the <a href="https://github.com/RactiveJS/require-ractive-plugin">Ractive RequireJS loader plugin</a>, it will pre-parse the template for us. We&#39;ll see in a moment why that&#39;s useful.</p>
+<p>Put the plugin in the same folder as the text loader plugin (which the Ractive plugin depends on). Note that we can omit the <code>&#39;.html&#39;</code> file extension:</p>
+<pre class="prettyprint lang-js">// define our main application, with an 'init' method to call when
+// the DOM is ready etc
+define([ 'Ractive', 'rv!templates/main' ], function ( Ractive, mainTemplate ) {
+
+  'use strict';
+
+  var app = {
+    init: function () {
+
+      // render our main view
+      this.mainView = new Ractive({
+        el: 'container',
+        template: mainTemplate
+      });
+    }
+  };
+
+  return app;
+
+});</pre>
+
+
+<h2 id="using-the-optimiser">Using the optimiser</h2>
+<p>You might wonder why the third example is better than the second &ndash; after all, we&#39;ve basically just added another middleman, right?</p>
+<p>The answer is that you can now use the <a href="http://requirejs.org/docs/optimization.html">RequireJS optimiser</a> to parse your template as part of your build process. The optimiser converts your project into a single minified file, which in most cases makes your app much quicker to load for the end user (because the browser only needs to make one HTTP request, and the total file size is reduced).</p>
+<p>By pre-parsing templates, we save browsers having to do it, which shaves a few milliseconds off at render time.</p>
+<p>So you get the best of both worlds &ndash; your templates stay neatly organised in their own files, where you can easily edit them, and the user gets the best possible experience.</p>
+<p>If you&#39;re <em>really</em> anal about performance, you can tweak things further still. We don&#39;t need the loader plugins any more (because everything has been inlined), but they&#39;re still there in our optimised file. We can instruct the optimiser to &#39;stub them out&#39;, saving ourselves a few precious bytes. In your optimiser config, add the following option:</p>
+<pre class="prettyprint lang-js">({
+    stubModules: [ 'rv', 'text' ]
+})</pre>
+
+<p>(This assumes you&#39;re using a <code>build.js</code> file, or a build system like Grunt. If you&#39;re using the optimiser on the command line it will be different &ndash; consult the <a href="http://requirejs.org/docs/optimization.html">documentation</a> for more info.)</p>
+<p>Getting to grips with AMD and RequireJS can be tricky at first, but it&#39;s worth the effort. Good luck!</p>
+</main>
+
+	
+	<script src="../js/prettify.js"></script>
+	<script>prettyPrint();
+
+		// Googlytics
+		(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+		ga('create', 'UA-5602942-6', 'ractivejs.org');
+		ga('send', 'pageview');</script></body></html>

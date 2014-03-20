@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+
+	<link rel="icon" type="image/png" href="../favicon.png">
+
+	<title>Ractive.adaptors | Docs | Ractive.js</title>
+
+	
+	<link href="http://fonts.googleapis.com/css?family=Source+Code+Pro:400,700,900" rel="stylesheet" type="text/css">
+	<link rel="stylesheet" href="../min.css"></head>
+
+<body class="example"><header class="docs-header"><nav><a href="http://ractivejs.org">&laquo; back to ractivejs.org</a>
+			<a class="edit-link" href="https://github.com/RactiveJS/docs.ractivejs.org/edit/master/docs/0.3.9/Ractive.adaptors.md"><span>edit this page</span></a></nav>
+
+		<h1>Ractive.adaptors</h1></header>
+
+	<main><div class="breadcrumbs"><a href="ractive-js-documentation">Home</a> &raquo; <a href="api-reference">API Reference</a> &raquo; <a href="ractive-adaptors">Ractive.adaptors</a></div>
+
+<p><a href="adaptors">Adaptors</a> are a way of teaching Ractive to communicate with other libraries, such as Backbone.</p>
+<p><code>Ractive.adaptors</code> is a registry of globally available adaptors. When you create a Ractive instance with adaptors, you can pass in a reference to the adaptor itself, or the name of an adaptor on <code>Ractive.adaptors</code>:</p>
+<pre class="prettyprint lang-js">// this...
+var ractive = new Ractive({
+  el: container,
+  template: myTemplate,
+  data: myBackboneModel,
+  adaptors: [ 'Backbone' ]
+});
+
+// ...is equivalent to this
+var ractive = new Ractive({
+  el: container,
+  template: myTemplate,
+  data: myBackboneModel,
+  adaptors: [ Ractive.adaptors.Backbone ]
+});</pre></main>
+
+	
+	<script src="../js/prettify.js"></script>
+	<script>prettyPrint();
+
+		// Googlytics
+		(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+		ga('create', 'UA-5602942-6', 'ractivejs.org');
+		ga('send', 'pageview');</script></body></html>

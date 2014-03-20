@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+
+	<link rel="icon" type="image/png" href="../favicon.png">
+
+	<title>SVG and older browsers | Docs | Ractive.js</title>
+
+	
+	<link href="http://fonts.googleapis.com/css?family=Source+Code+Pro:400,700,900" rel="stylesheet" type="text/css">
+	<link rel="stylesheet" href="../min.css"></head>
+
+<body class="example"><header class="docs-header"><nav><a href="http://ractivejs.org">&laquo; back to ractivejs.org</a>
+			<a class="edit-link" href="https://github.com/RactiveJS/docs.ractivejs.org/edit/master/docs/0.3.9/SVG and older browsers.md"><span>edit this page</span></a></nav>
+
+		<h1>SVG and older browsers</h1></header>
+
+	<main><div class="breadcrumbs"><a href="ractive-js-documentation">Home</a> &raquo; <a href="troubleshooting">Troubleshooting</a> &raquo; <a href="svg-and-older-browsers">SVG and older browsers</a></div>
+
+<p>Ractive doesn&#39;t mind whether you&#39;re rendering HTML or SVG &ndash; it treats both the same way. Unfortunately, some browsers (notably IE8 and below, and Android 2.3 and below) <em>do</em> care.</p>
+<p>If your template includes SVG, these browsers will throw an error along the following lines:</p>
+<pre>"This browser does not support namespaces other than http://www.w3.org/1999/xhtml. The most likely cause of this error is that you're trying to render SVG in an older browser. See https://github.com/RactiveJS/Ractive/wiki/SVG-and-older-browsers for more information"</pre>
+
+<p>Unfortunately, <a href="http://xkcd.com/601/">the only winning move is not to play</a>. In other words, you will need to explicitly choose not to try and render SVG.</p>
+<p>For example, you might do something along these lines:</p>
+<pre class="prettyprint lang-js">// detect SVG support (thanks, http://stackoverflow.com/a/706590)
+hasSvgSupport = document.implementation.hasFeature('http://www.w3.org/TR/SVG11/feature#BasicStructure', '1.1');
+
+// note &ndash; as of Ractive 0.3.9, you can do this instead:
+hasSvgSupport = Ractive.svg;
+
+if ( hasSvgSupport ) {
+  template = awesomeVectorGraphics;
+} else {
+  template = rubbishFallbackContent;
+}
+
+ractive = new Ractive({
+  el: 'container',
+  template: template
+});</pre></main>
+
+	
+	<script src="../js/prettify.js"></script>
+	<script>prettyPrint();
+
+		// Googlytics
+		(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+		ga('create', 'UA-5602942-6', 'ractivejs.org');
+		ga('send', 'pageview');</script></body></html>

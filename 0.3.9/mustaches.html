@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+
+	<link rel="icon" type="image/png" href="../favicon.png">
+
+	<title>Mustaches | Docs | Ractive.js</title>
+
+	
+	<link href="http://fonts.googleapis.com/css?family=Source+Code+Pro:400,700,900" rel="stylesheet" type="text/css">
+	<link rel="stylesheet" href="../min.css"></head>
+
+<body class="example"><header class="docs-header"><nav><a href="http://ractivejs.org">&laquo; back to ractivejs.org</a>
+			<a class="edit-link" href="https://github.com/RactiveJS/docs.ractivejs.org/edit/master/docs/0.3.9/Mustaches.md"><span>edit this page</span></a></nav>
+
+		<h1>Mustaches</h1></header>
+
+	<main><div class="breadcrumbs"><a href="ractive-js-documentation">Home</a> &raquo; <a href="glossary">Glossary</a> &raquo; <a href="mustaches">Mustaches</a></div>
+
+
+<h2 id="what-is-mustache-">What is Mustache?</h2>
+<p><a href="http://mustache.github.com">Mustache</a> is one of the most popular templating languages. It&#39;s a very lightweight, readable syntax with a comprehensive specification &ndash; which means that implementations (such as Ractive) can test that they&#39;re doing things correctly.</p>
+<p>Other templating languages borrow liberally from Mustache. <a href="http://handlebarsjs.com">Handlebars</a> has a mustache-like syntax, as does <a href="http://angularjs.org">Angular</a>.</p>
+<h2 id="what-are-mustaches-">What are mustaches?</h2>
+<p>Within this documentation, and within Ractive&#39;s code, &#39;mustache&#39; means two things &ndash; a snippet of a template which uses mustache delimiters, such as <code>{{name}}</code>, and the object within our <a href="parallel-dom">parallel DOM</a> that is responsible for listening to data changes and updating the (real) DOM.</p>
+<p>We say that the <code>{{name}}</code> mustache has a <em><a href="references">reference</a></em> of <code>name</code>. When it gets rendered, and we create the object whose job it is to represent <code>name</code> in the DOM, we attempt to <em>resolve the reference according to the current context stack</em>. For example if we&#39;re in the <code>user</code> context, and <code>user</code> has a property of <code>name</code>, <code>name</code> will resolve to a <a href="keypaths">keypath</a> of <code>user.name</code>.</p>
+<p>As soon as the mustache knows what its keypath is (which may not be at render time, if data has not yet been set), it registers itself as a <em><a href="dependants">dependant</a></em> of the keypath. Then, whenever data changes, Ractive scans the dependency graph to see which mustaches need to update, and notifies them accordingly.</p>
+<p>As well as simple <em>interpolators</em> like <code>{{name}}</code>, the other mustaches types &ndash; sections, partials, and even delimiter changes &ndash; are supported. Consult the <a href="http://learn.ractivejs.org">tutorials</a> to learn about these.</p>
+<h2 id="extensions">Extensions</h2>
+<p>Ractive is 99% backwards-compatible with Mustache, but adds five additional features (array index references, object iteration, restricted references, ancestor references and expressions) which are detailed below.</p>
+<h3 id="array-index-references">Array Index references</h3>
+<p>Index references are a way of determining where we are within a list section. It&#39;s best explained with an example:</p>
+<pre class="prettyprint lang-html">{{#items:i}}
+  &lt;!-- within here, {{i}} refers to the current index --&gt;
+  &lt;p&gt;Item {{i}}: {{content}}&lt;/p&gt;
+{{/items}}</pre>
+
+<p>If you then set <code>items</code> to <code>[{content: &#39;zero&#39;}, {content: &#39;one&#39;}, {content: &#39;two&#39;}]</code>, the result would be</p>
+<pre class="prettyprint lang-html">&lt;p&gt;Item 0: zero&lt;/p&gt;
+&lt;p&gt;Item 1: one&lt;/p&gt;
+&lt;p&gt;Item 2: two&lt;/p&gt;</pre>
+
+<p>This is particularly useful when you need to respond to user interaction. For example you could add a <code>data-index=&#39;{{i}}&#39;</code> attribute, then easily find which item a user clicked on.</p>
+<h3 id="object-iteration">Object Iteration</h3>
+<p>Mustache can also iterate over objects, rather than array. The syntax is the same as for Array indices. Given the following ractive:</p>
+<pre class="prettyprint lang-javascript">ractive = new Ractive({
+  el: container,
+  template: template,
+  data: {
+    users: {
+      Joe: { email: 'joe@example.com' },
+      Jane: { email: 'jane@example.com' },
+      Mary: { email: 'mary@example.com' }
+    }
+  }
+});</pre>
+
+<p>We can iterate over the users object with the following:</p>
+<pre class="prettyprint lang-html">&lt;ul&gt;
+  {{#users:name}}
+    &lt;li&gt;{{name}}: {{email}}&lt;/li&gt;
+  {{/users}}
+&lt;/ul&gt;
+
+&lt;!-- becomes... --&gt;
+&lt;ul&gt;
+  &lt;li&gt;Joe: joe@example.com&lt;/li&gt;
+  &lt;li&gt;Jane: jane@example.com&lt;/li&gt;
+  &lt;li&gt;Mary: mary@example.com&lt;/li&gt;
+&lt;/ul&gt;</pre>
+
+<h3 id="restricted-references">Restricted references</h3>
+<p>Normally, references are resolved according to a specific algorithm, which involves <em>moving up the context stack</em> until a property matching the reference is found. In the vast majority of cases this is exactly what you want, but occasionally (for example when dealing with <a href="partials#recursive-partials">recursive partials</a>) it is useful to be able to specify that a property must exist <em>in the current context</em>.</p>
+<p>To restrict a reference to the current context, prefix it with a <code>.</code>, e.g. <code>{{#.bar}}</code>:</p>
+<pre class="prettyprint lang-html">{{#foo}}
+  {{#bar}}This section will render, because it will resolve to 'bar'{{/bar}}
+  {{#.bar}}This section will NOT render, because it resolves to 'foo.bar'{{/.bar}}
+{{/foo}}</pre>
+
+<pre class="prettyprint lang-js">ractive = new Ractive({
+  el: myContainer,
+  template: myTemplate,
+  data: { bar: true, foo: {} }
+});</pre>
+
+
+<h3 id="ancestor-references">Ancestor references</h3>
+<p>Very occasionally, you might need to refer explicitly to a property higher up in the tree to avoid naming conflicts. You can do that by prefixing references with <code>../</code> (or <code>../../</code>, or <code>../../../</code>...):</p>
+<pre class="prettyprint lang-html">&lt;h1&gt;Blog posts by {{name}}&lt;/p&gt;
+
+&lt;ul class='blog-posts'&gt;
+  {{#posts}}
+    &lt;li&gt;&lt;a href='{{ slugify(../../name) }}/{{ slugify(name) }}'&gt;{{name}}&lt;/a&gt;&lt;/li&gt;
+  {{/posts}}
+&lt;/ul&gt;</pre>
+
+<pre class="prettyprint lang-js">var ractive = new Ractive({
+  el: document.body,
+  template: myTemplate,
+  data: {
+    name: 'Rich',
+    posts: [
+      { name: 'This is a blog post' },
+      { name: 'And so is this' }
+    ],
+    slugify: function ( str ) {
+      var slug;
+      /* SOME CODE HAPPENS */
+      return slug;
+    }
+  }
+});</pre>
+
+<p>In this example, some damn fool decided it would be a good idea to give posts a &#39;name&#39; property as well as authors. Which means that in the <code>href</code> attribute, it wouldn&#39;t be possible to refer to the root-level <code>name</code> property, because it would always resolve to the <code>name</code> property of the current post &ndash; and that&#39;s no good, because the root-level <code>name</code> property is used to construct the URL.</p>
+<p>By using <code>../../name</code> instead of <code>name</code>, we&#39;re saying &#39;go up one level (to <code>posts</code>), then up one more (to the root), and <em>then</em> look for the <code>name</code> property&#39;.</p>
+<h3 id="expressions">Expressions</h3>
+<p>Expressions are a big topic, so they have a <a href="expressions">page of their own</a>. But this section is about explaining the difference between vanilla Mustache and Ractive Mustache, so they deserve a mention here.</p>
+<p>Expressions look like any normal mustache. For example this expression converts <code>num</code> to a percentage:</p>
+<pre class="prettyprint lang-html">&lt;p&gt;{{ num * 100 }}%&lt;/p&gt;</pre>
+
+<p>The neat part is that this expression will recognise it has a dependency on whatever keypath <code>num</code> resolves to, and will re-evaluate whenever the value of <code>num</code> changes.</p>
+<p>Mustache fans may bristle at expressions &ndash; after all, the whole point is that mustache templates are <em>logic-less</em>, right? But what that really means is that the logic is <em>embedded in the syntax</em> (what are conditionals and iterators if not forms of logic?) rather than being language dependent. Expressions just allow you to add a little more, and insodoing make complex tasks simple.</p>
+<h2 id="footnote">Footnote</h2>
+<p>*Ractive implements the Mustache specification as closely as possible. 100% compliance is impossible, because it&#39;s unlike other templating libraries &ndash; rather than turning a string into a string, Ractive turns a string into DOM, which has to be restringified so we can test compliance. Some things, like lambdas, get lost in translation &ndash; it&#39;s unavoidable, and unimportant.</p>
+</main>
+
+	
+	<script src="../js/prettify.js"></script>
+	<script>prettyPrint();
+
+		// Googlytics
+		(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+		ga('create', 'UA-5602942-6', 'ractivejs.org');
+		ga('send', 'pageview');</script></body></html>

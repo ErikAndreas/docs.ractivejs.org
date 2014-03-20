@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+
+	<link rel="icon" type="image/png" href="../favicon.png">
+
+	<title>Components | Docs | Ractive.js</title>
+
+	
+	<link href="http://fonts.googleapis.com/css?family=Source+Code+Pro:400,700,900" rel="stylesheet" type="text/css">
+	<link rel="stylesheet" href="../min.css"></head>
+
+<body class="example"><header class="docs-header"><nav><a href="http://ractivejs.org">&laquo; back to ractivejs.org</a>
+			<a class="edit-link" href="https://github.com/RactiveJS/docs.ractivejs.org/edit/master/docs/0.3.9/Components.md"><span>edit this page</span></a></nav>
+
+		<h1>Components</h1></header>
+
+	<main><div class="breadcrumbs"><a href="ractive-js-documentation">Home</a> &raquo; <a href="plugins">Plugins</a> &raquo; <a href="components">Components</a></div>
+
+<p>In many situations, you want to encapsulate behaviour and markup into a single reusable <em>component</em>, which can be dropped in to Ractive applications.</p>
+<p>First, you need to <strong>create the component</strong> with <a href="ractive-extend">Ractive.extend()</a>, which allows you to define a template, initialisation behaviour, default data, and so on. (If you&#39;re not familiar with Ractive.extend() you should read that page first.)</p>
+<pre class="prettyprint lang-js">var MyWidget = Ractive.extend({
+  template: '&lt;div on-click="activate"&gt;{{message}}&lt;/p&gt;',
+  init: function () {
+    this.on( 'activate', function () {
+      alert( 'Activating!' );
+    });
+  },
+  data: {
+    message: 'No message specified, using the default'
+  }
+});</pre>
+
+<p>Then, you need to <strong>register the component</strong> by adding it to <code>Ractive.components</code>:</p>
+<pre class="prettyprint lang-js">Ractive.components.widget = MyWidget;
+
+// or, if you don't want to make it globally available,
+// you can use it with only a single Ractive instance
+var ractive = new Ractive({
+  el: 'body',
+  template: mainTemplate,
+  components: {
+    widget: MyWidget
+  }
+});</pre>
+
+<p>Finally, you <strong>use the component</strong> by referring to it within another template:</p>
+<pre class="prettyprint lang-html">&lt;div class='application'&gt;
+  &lt;h1&gt;I've got a widget&lt;/h1&gt;
+  &lt;widget message='Click to activate!'/&gt;
+&lt;/div&gt;</pre>
+
+<p>Using the &#39;widget&#39; component like this is more or less equivalent to doing the following:</p>
+<pre class="prettyprint lang-js">new MyWidget({
+  el: document.querySelector( '.application' ),
+  append: true, // so the component doesn't nuke the &lt;h1&gt;
+  data: {
+    message: 'Click to activate!'
+  }
+});</pre>
+
+
+<h2 id="binding">Binding</h2>
+<p>Instead of passing a static message (&#39;Click to activate!&#39;) through, we could have passed a dynamic one:</p>
+<pre class="prettyprint lang-html">&lt;widget message='{{foo}}'/&gt;</pre>
+
+<p>In this case, the value of <code>message</code> within the component would be bound to the value of <code>foo</code> in the parent Ractive instance. When the value of parent-<code>foo</code> changes, the value of child-<code>message</code> also changes, and vice-versa.</p>
+<h2 id="events">Events</h2>
+<p>You can subscribe to events that emanate from a component in the normal way. For example, our widget template contains a <code>&lt;div&gt;</code> element with an <code>on-click=&quot;activate&quot;</code> directive. We&#39;re listening for that event inside the MyWidget <code>init</code> method, but we can also listen for it like so:</p>
+<pre class="prettyprint lang-html">&lt;widget on-activate="doSomething"/&gt;</pre>
+<pre class="prettyprint lang-js">ractive.on( 'doSomething', function () {
+  alert( 'Widget activated!' );
+});</pre>
+
+<p>(The same goes for any events that are fired programmatically by the component, rather than as a result of user interaction.)</p>
+<h2 id="psuedo-dynamic-templating">Psuedo Dynamic Templating</h2>
+<p>In some cases you want to render a different template depending on the data that is passed in.</p>
+<h3 id="form-element-component">Form Element Component</h3>
+<pre class="prettyprint lang-js">var formElement = Ractive.extend({
+  template: '{{&gt;element}}',
+  setTemplate: function(options) {
+    options.partials.element = options.data.template;
+  },
+  beforeInit: function(options) {
+    this.setTemplate(options)
+  }
+});</pre>
+
+<h3 id="form-template">Form Template</h3>
+<p><pre class="prettyprint lang-html">{{#items}}
+&lt;formElement value=&quot;{{value}}&quot; template=&quot;{{template}}&quot;/&gt;
+{{/items}}</pre></p>
+<h3 id="ractive-form">Ractive Form</h3>
+<p><pre class="prettyprint lang-js">var ractive = new Ractive({
+  el: &#39;body&#39;,
+  template: formTemplate,
+  components: {
+    formElement: formElement
+  }
+  data: {
+    items: [
+        {
+          template: &#39;&lt;h1&gt;{{value}}&lt;/h1&gt;&#39;,
+          value: &#39;This is a title&#39;
+        },
+        {
+          template: &#39;&lt;input type=&quot;text&quot; value=&quot;{{value}}&quot; style=&quot;display:block; clear: both;&quot; /&gt;&#39;,
+          value: &#39;Input Value&#39;
+        },
+        {
+          template: &#39;&lt;textarea value=&quot;{{value}}&quot;&gt;&lt;/textarea&gt;&#39;,
+          value: &#39;Textarea Value&#39;
+        }
+    ]
+  }</p>
+<p>});</p>
+<p>ractive.observe(&#39;items.*.value&#39;, function(newValue, oldValue, keypath) {
+  console.log(keypath + &#39; &#39; + newValue);
+});</pre></p>
+<h2 id="caveat">Caveat</h2>
+<p>Components are a stable feature, but still relatively new &ndash; certain aspects have yet to be implemented. Pardon the dust! There is a <a href="https://github.com/RactiveJS/Ractive/issues/74">long-running GitHub issue</a>, which may be of interest.</p>
+</main>
+
+	
+	<script src="../js/prettify.js"></script>
+	<script>prettyPrint();
+
+		// Googlytics
+		(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+		ga('create', 'UA-5602942-6', 'ractivejs.org');
+		ga('send', 'pageview');</script></body></html>

@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+
+	<link rel="icon" type="image/png" href="../favicon.png">
+
+	<title>Adaptors | Docs | Ractive.js</title>
+
+	
+	<link href="http://fonts.googleapis.com/css?family=Source+Code+Pro:400,700,900" rel="stylesheet" type="text/css">
+	<link rel="stylesheet" href="../min.css"></head>
+
+<body class="example"><header class="docs-header"><nav><a href="http://ractivejs.org">&laquo; back to ractivejs.org</a>
+			<a class="edit-link" href="https://github.com/RactiveJS/docs.ractivejs.org/edit/master/docs/0.3.9/Adaptors.md"><span>edit this page</span></a></nav>
+
+		<h1>Adaptors</h1></header>
+
+	<main><div class="breadcrumbs"><a href="ractive-js-documentation">Home</a> &raquo; <a href="plugins">Plugins</a> &raquo; <a href="adaptors">Adaptors</a></div>
+
+<p>Adaptors are a way of teaching Ractive to communicate seamlessly with other libraries such as Backbone. This means that you can, for example, have some or all of your app&#39;s data handled by Backbone &ndash; including fetching from and saving to your server, validation, sorting, filtering and so on &ndash; but still build a reactive user interface using Ractive, without having to create custom View classes or adding a whole load of event binding code.</p>
+<p>It&#39;s probably easier to show, rather than tell: <a href="http://ractivejs.org/examples/backbone">this example application</a> uses Backbone models describing all the James Bond films. The <a href="https://github.com/RactiveJS/plugins.adaptors.Backbone">code for the Backbone adaptor is here</a>.</p>
+<h2 id="using-adaptors">Using adaptors</h2>
+<p>Add the adaptor code to your app. Using the Backbone adaptor as an example:</p>
+<pre class="prettyprint lang-html">&lt;script src='lib/underscore.js'&gt;&lt;/script&gt; &lt;!-- Backbone dependency --&gt;
+&lt;script src='lib/backbone.js'&gt;&lt;/script&gt;
+&lt;script src='lib/Ractive.js'&gt;&lt;/script&gt;
+
+&lt;!-- the adaptor --&gt;
+&lt;script src='lib/adaptors/Ractive-Backbone.js'&gt;&lt;/script&gt;</pre>
+
+<p>If you&#39;re using module loaders, beware &ndash; the adaptor needs access to both <code>Ractive</code> and <code>Backbone</code>. You may need to change your paths config (or equivalent), or modify the adaptor source code to fit your app.</p>
+<p>When you create a new Ractive instance, you can specify which adaptors to use like so:</p>
+<pre class="prettyprint lang-js">ractive = new Ractive({
+  el: container,
+  template: myTemplate,
+  data: myBackboneModel,
+  adaptors: [ 'Backbone' ]
+});</pre>
+
+<p>Ractive will then see if there&#39;s a <code>Backbone</code> property of <code>Ractive.adaptors</code>. (If not, an error will be thrown.) Alternatively, you can pass in the adaptor itself rather than the name, e.g.</p>
+<pre class="prettyprint lang-js">ractive = new Ractive({
+  el: container,
+  template: myTemplate,
+  data: myBackboneModel,
+  adaptors: [ Ractive.adaptors.Backbone ]
+});</pre>
+
+
+<h2 id="creating-your-own-adaptors">Creating your own adaptors</h2>
+<p>An adaptor is an object with two methods &ndash; <code>filter</code> and <code>wrap</code>:</p>
+<pre class="prettyprint lang-js">myAdaptor = {
+  filter: function ( object, keypath, ractive ) {
+    // return `true` if a particular object is of the type we want to adapt
+  },
+  wrap: function ( ractive, object, keypath, prefixer ) {
+    // set up event bindings etc, and return a 'wrapper'
+  }
+};</pre>
+
+<p>The &#39;wrapper&#39; allows Ractive to interact with the object. The easiest way to explain it is with an example.</p>
+<h2 id="bear-with-me-there-s-quite-a-lot-of-code-here">Bear with me, there&#39;s quite a lot of code here</h2>
+<p>Suppose you have a <code>Box</code> class, which looks like this:</p>
+<pre class="prettyprint lang-js">Box = function ( width, height ) {
+  this.width = width;
+  this.height = height;
+};
+
+Box.prototype = {
+  getArea: function () {
+    return this.width * this.height;
+  },
+  setWidth: function ( width ) {
+    this.width = width;
+  },
+  setHeight: function ( height ) {
+    this.height = height;
+  }
+};</pre>
+
+<p>Now suppose we&#39;d like to have a setup like this:</p>
+<pre class="prettyprint lang-html">&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;&lt;th&gt;Width&lt;/th&gt;&lt;th&gt;Height&lt;/th&gt;&lt;th&gt;Area&lt;/th&gt;&lt;/tr&gt;
+  &lt;/thead&gt;
+
+  &lt;tbody&gt;
+    {{#boxes}}
+      &lt;tr&gt;&lt;td&gt;{{width}}&lt;/td&gt;&lt;td&gt;{{height}}&lt;/td&gt;&lt;td&gt;{{area}}&lt;/td&gt;&lt;/tr&gt;
+    {{/boxes}}
+  &lt;/tbody&gt;
+&lt;/table&gt;</pre>
+
+<pre class="prettyprint lang-js">var littleBox, mediumBox, bigBox, ractive;
+
+littleBox = new Box( 5, 7 );
+mediumBox = new Box( 12, 20 );
+bigBox = new Box( 35, 45 );
+
+ractive = new Ractive({
+  el: 'container',
+  template: myTemplate,
+  data: { boxes: [ littleBox, mediumBox, bigBox ] }
+});</pre>
+
+<p>What we want is to be able to interact with the boxes themselves, and have our table update itself:</p>
+<pre class="prettyprint lang-js">// This should update both the width and area cells of the first table row
+littleBox.setWidth( 7 );</pre>
+
+<p>We can do that with a box adaptor:</p>
+<pre class="prettyprint lang-js">boxAdaptor = {
+  // Ractive uses the `filter` function to determine whether something
+  // needs to be wrapped or not. For example 'boxes' doesn't need to be
+  // wrapped because it's an array, but 'boxes.0' &ndash; which is the same as
+  // our `littleBox` variable &ndash; does.
+  filter: function ( object ) {
+    return object instanceof Box;
+  },
+
+  // If an object passes the filter, we wrap it.
+  wrap: function ( ractive, box, keypath, prefixer ) {
+    // We can simply overwrite the prototype methods with ones that
+    // do the same thing, but also notify Ractive about the changes
+    box.setWidth = function ( width ) {
+
+      this.width = width;
+
+      // Very often, inside adaptors, we need to turn _relative keypaths_
+      // into _absolute keypaths_. For example if this box's keypath is
+      // 'boxes.0', we need to turn 'width' and 'area' into 'boxes.0.width'
+      // and 'boxes.0.area'.
+      //
+      // This is such a common requirement that a helper function -
+      // `prefixer` &ndash; is automatically generated for each wrapper.
+      ractive.set( prefixer({
+        width: width,
+        area: box.getArea()
+      }));
+    };
+
+    box.setHeight = function ( height ) {
+      this.height = height;
+
+      ractive.set( prefixer({
+        height: height,
+        area: box.getArea()
+      }));
+    };
+
+    // The wrapper we return is used by Ractive to interact with each box.
+    // It must have a `teardown` method and a `get` method.
+    //
+    // If you want to be able to interact with the object via Ractive (e.g.
+    // `ractive.set( 'boxes[0].width', 10 )` as well as the other way round,
+    // then you should also provide `set` and `reset` methods.
+    return {
+      // When a given Box instance is no longer relevant to Ractive, we
+      // revert it to its normal state
+      teardown: function () {
+        // we just remove the setWidth and setHeight methods,
+        // so that the prototype methods get used instead
+        delete box.setWidth;
+        delete box.setHeight;
+      },
+
+      // The `get()` method returns an object representing how Ractive should
+      // 'see' each Box instance
+      get: function () {
+        return {
+          width: box.width,
+          height: box.height,
+          area: box.getArea()
+        };
+      },
+
+      // The `set()` method is called when you do `ractive.set()`, if the keypath
+      // is _downstream_ of the wrapped object. So if, for example, you do
+      // `ractive.set( 'boxes[0].width', 10 )`, this `set()` method will be called
+      // with 'width' and 10 as arguments.
+      set: function ( property, value ) {
+        if ( property === 'width' || property === 'height' ) {
+          box[ property ] = value;
+          ractive.set( keypath + '.area', box.getArea() );
+        }
+      },
+
+      // The `reset()` method is called when you do `ractive.set()`, if the keypath
+      // is _identical_ to the keypath of the wrapped object. Two things could happen
+      // &ndash; the wrapped object could modify itself to reflect the new data, or (if it
+      // doesn't know what to do with the new data) it could return `false`, in which
+      // case it will be torn down.
+      reset: function ( data ) {
+        // if `data` is a new Box instance, or if it isn't an object at all,
+        // we should get rid of this one
+        if ( typeof data !== 'object' || data instanceof Box ) {
+          return false;
+        }
+
+        if ( data.width !== undefined ) {
+          box.width = width;
+        }
+
+        if ( data.height !== undefined ) {
+          box.height = width;
+        }
+      }
+    };
+  }
+};</pre>
+
+<p>You can see this adaptor in action <a href="http://jsfiddle.net/rich_harris/ATAgH/">in a JSFiddle here</a>. Notice that because our wrapper includes a <code>set</code> method, <a href="two-way-binding">two‐way binding</a> works seamlessly.</p>
+<h2 id="adding-polish">Adding polish</h2>
+<p>This adaptor works, but we can improve it. Rather than re-creating the <code>teardown</code>, <code>get</code>, <code>set</code>, and <code>reset</code> methods each time we wrap a box, we can use prototypal inheritance instead. Study the existing adaptors to see this in action.</p>
+<p>Something else to be aware of: there is no built-in mechanism for avoiding infinite loops. If your wrapper calls <code>ractive.set()</code>, and that causes the wrapper&#39;s <code>set()</code> method to be called, which causes the underlying object to change, triggering an event which causes <code>ractive.set()</code> to be called, then a &#39;Maximum call stack size exceeded&#39; message isn&#39;t far away.</p>
+<p>This isn&#39;t a problem with primitive values (numbers, strings, booleans and so on) because Ractive doesn&#39;t bother calling <code>set()</code> if a value hasn&#39;t changed. But with objects and arrays, there&#39;s no easy and performant way to tell if the contents have changed, so <code>set()</code> gets called <em>in case something changed</em> rather than <em>because something changed</em>. You can solve this problem with a short-circuiting mechanism &ndash; again, study the examples.</p>
+<h2 id="share-your-adaptors-">Share your adaptors!</h2>
+<p>If you create an adaptor that you think other developers would be able to use, please share it via <a href="http://twitter.com/RactiveJS">@RactiveJS</a>!</p>
+</main>
+
+	
+	<script src="../js/prettify.js"></script>
+	<script>prettyPrint();
+
+		// Googlytics
+		(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+		ga('create', 'UA-5602942-6', 'ractivejs.org');
+		ga('send', 'pageview');</script></body></html>

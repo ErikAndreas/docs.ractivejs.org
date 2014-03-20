@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+
+	<link rel="icon" type="image/png" href="../favicon.png">
+
+	<title>Dependants | Docs | Ractive.js</title>
+
+	
+	<link href="http://fonts.googleapis.com/css?family=Source+Code+Pro:400,700,900" rel="stylesheet" type="text/css">
+	<link rel="stylesheet" href="../min.css"></head>
+
+<body class="example"><header class="docs-header"><nav><a href="http://ractivejs.org">&laquo; back to ractivejs.org</a>
+			<a class="edit-link" href="https://github.com/RactiveJS/docs.ractivejs.org/edit/master/docs/0.3.9/Dependants.md"><span>edit this page</span></a></nav>
+
+		<h1>Dependants</h1></header>
+
+	<main><div class="breadcrumbs"><a href="ractive-js-documentation">Home</a> &raquo; <a href="glossary">Glossary</a> &raquo; <a href="dependants">Dependants</a></div>
+
+<p>Ractive maintains a <em>dependency graph</em> in order to do the minimum amount of work necessary to keep the DOM up-to-date.</p>
+<p>If you inspect a Ractive instance in your console, you&#39;ll see a property called <code>_deps</code>. This is where all dependants are listed, indexed by their dependency.</p>
+<p>There is also a concept of &#39;priority&#39;, which exists to save us some work. If, for example, a section needs to be removed (perhaps it&#39;s a conditional section, and the condition just went from truthy to falsy), there is no point in updating all its children, so we make sure that we teardown the section first. As part of that teardown process, the children &ndash; which all have lower priority &ndash; unregister themselves as dependants before they get a chance to update.</p>
+<h2 id="indirect-dependencies">Indirect dependencies</h2>
+<p>If you have a mustache which depends on <code>foo.bar</code>, and <code>foo</code> changes, it&#39;s quite possible that the mustache needs to re-render. We say that the mustache has an <em>indirect dependency</em> on <code>foo</code>, or that it has a <em>direct dependency on a downstream keypath</em> of <code>foo</code>.</p>
+<p>This relationship is expressed through the <code>_depsMap</code> property of a Ractive instance &ndash; whenever <code>foo</code> changes, as well as dealing with direct <code>foo</code> dependants we check the map for those indirect dependants.</p>
+<p>In the case of <a href="expressions">expressions</a> and <a href="observers">observers</a>, we also need to consider dependants of <em>upstream keypaths</em>. For example, suppose we have a section based on a sorted array &ndash; if we modify one of the members of the array, we need to see if the sort order has changed or not as a result:</p>
+<pre class="prettyprint lang-html">{{#( sort( list, 'name' ) )}}
+  &lt;p&gt;{{name}}&lt;/p&gt;
+{{/()}}</pre>
+
+<pre class="prettyprint lang-js">ractive = new Ractive({
+  el: myContainer,
+  template: myTemplate,
+  data: {
+    list: [{ name: 'Bob' }, { name: 'Charles' }, { name: 'Alice' }],
+    sort: function ( list, property ) {
+      return list.slice().sort( function ( a, b ) {
+        return a[ property ] &lt; b[ property ] ? -1 : 1;
+      });
+    }
+  }
+});
+
+// renders Alice, Bob, Charles
+
+ractive.set( 'list[0].name', 'Zebediah' );
+
+// updates to Alice, Charles, Zebediah</pre>
+
+<p>In the example, setting <code>list[0].name</code> causes dependants of <code>list</code> to be updated.</p>
+<p>As well as expressions, <a href="observers">observers</a> respond to both upstream and downstream changes.</p>
+<h2 id="expressions-with-multiple-dependencies">Expressions with multiple dependencies</h2>
+<p>The expression <code>{{ a + b }}</code> has two dependencies &ndash; <code>a</code> and <code>b</code> (or more accurately, whatever those <a href="references">references</a> resolve to). The <code>_deps</code> graph actually includes objects representing those individual references, rather than the expression itself &ndash; the reference objects then notify the expression (if their value has changed) that it will need to re-evaluate itself.</p>
+<p>Because the expression has multiple dependencies, it won&#39;t trigger an update straight away &ndash; it will wait until all the new data has come in first. So doing <code>ractive.set({ a: 1, b: 2 })</code> will only trigger one update, not two.</p>
+</main>
+
+	
+	<script src="../js/prettify.js"></script>
+	<script>prettyPrint();
+
+		// Googlytics
+		(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+		ga('create', 'UA-5602942-6', 'ractivejs.org');
+		ga('send', 'pageview');</script></body></html>

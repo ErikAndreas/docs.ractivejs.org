@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+
+	<link rel="icon" type="image/png" href="../favicon.png">
+
+	<title>Expressions | Docs | Ractive.js</title>
+
+	
+	<link href="http://fonts.googleapis.com/css?family=Source+Code+Pro:400,700,900" rel="stylesheet" type="text/css">
+	<link rel="stylesheet" href="../min.css"></head>
+
+<body class="example"><header class="docs-header"><nav><a href="http://ractivejs.org">&laquo; back to ractivejs.org</a>
+			<a class="edit-link" href="https://github.com/RactiveJS/docs.ractivejs.org/edit/master/docs/0.3.9/Expressions.md"><span>edit this page</span></a></nav>
+
+		<h1>Expressions</h1></header>
+
+	<main><div class="breadcrumbs"><a href="ractive-js-documentation">Home</a> &raquo; <a href="glossary">Glossary</a> &raquo; <a href="expressions">Expressions</a></div>
+
+<p>Expressions allow you to use logic within a template. At their simplest, that may just mean a basic arithmetic operation, such as converting to percentages, but there are a variety of more complex uses, such as the examples below.</p>
+<p>These examples are plucked from the air &ndash; whether they would be useful or not in real life depends on what you&#39;re trying to do. The point is that you can include more of your view logic at the declarative layer &ndash; the template &ndash; where it&#39;s easier to <em>reason about</em>.</p>
+<h2 id="examples">Examples</h2>
+<h3 id="making-your-index-references-mustaches-index-references-start-at-1-rather-than-0-">Making your <a href="mustaches#index-references">index references</a> start at 1 rather than 0:</h3>
+<pre class="prettyprint lang-html">&lt;div class='bar-chart'&gt;
+  {{#bars:i}}
+    &lt;div style='width: {{ value * 100 }}%;'&gt;{{ i + 1 }}&lt;/div&gt;
+  {{/bars}}
+&lt;/div&gt;</pre>
+
+<h3 id="formatting-a-currency">Formatting a currency</h3>
+<p>In this case, so that <code>1.79</code> renders as <code>£1.79p</code></p>
+<pre class="prettyprint lang-html">&lt;p&gt;Price: &lt;strong&gt;{{ format( price ) }}&lt;/strong&gt;&lt;/p&gt;</pre>
+
+<h3 id="adding-a-class-to-an-element-based-on-a-condition">Adding a class to an element based on a condition</h3>
+<pre class="prettyprint lang-html">&lt;a class='button {{ active ? "on" : "off" }}'&gt;switch&lt;/a&gt;</pre>
+
+<h3 id="a-template-section-that-depends-on-a-condition">A template section that depends on a condition</h3>
+<pre>{{# status === 'running' }}
+   &lt;p&gt;Running&lt;/p&gt;
+{{/ end of filter }}</pre>
+
+<h3 id="filtering-a-list-to-exclude-certain-records">Filtering a list to exclude certain records</h3>
+<pre class="prettyprint lang-html">&lt;ul&gt;
+{{# exclude( list, 'N/A' ) }}
+  &lt;li&gt;{{author}}: {{title}}&lt;/li&gt;
+{{/ end of filter }}
+&lt;/ul&gt;</pre>
+
+<h2 id="valid-expressions">Valid expressions</h2>
+<p>These are, of course, JavaScript expressions. Almost any valid JavaScript expression can be used, with a few exceptions:</p>
+<ul>
+<li>No assignment operators (i.e. <code>a = b</code>, <code>a += 1</code>, <code>a--</code> and so on)</li>
+<li>No <code>new</code>, <code>delete</code>, or <code>void</code> operators</li>
+<li>No function literals (i.e. anything that involves the <code>function</code> keyword)</li>
+<li>No regular expression literals (this may change in future!)</li>
+</ul>
+<p>Aside from a subset of global objects (e.g. <code>Math</code>, <code>Array</code>, <code>parseInt</code>, <code>encodeURIComponent</code> &ndash; full list below), any references must be to properties (however deeply nested) of the Ractive instance&#39;s data, rather than arbitrary variables. Reference resolution follows the <a href="references">normal process</a>.</p>
+<h2 id="does-this-use-eval-">Does this use <code>eval</code>?</h2>
+<p>Yes and no. You&#39;ve probably read that &#39;eval is evil&#39;, or some other such nonsense. The truth is that while it does get abused, and can theoretically introduce security risks when user input gets involved, there are some situations where it&#39;s both necessary and sensible.</p>
+<p>But repeatedly <code>eval</code>ing the same code is a performance disaster. Instead, we use the <code>Function</code> constructor, which is a form of <code>eval</code>, except that the code gets compiled once instead of every time it executes.</p>
+<h2 id="a-note-about-efficiency">A note about efficiency</h2>
+<p>Using the <code>Function</code> constructor instead of <code>eval</code> is just one way that Ractive optimises expressions. Consider a case like this:</p>
+<pre class="prettyprint lang-html">{{a}} + {{b}} = {{ a + b }}
+{{c}} + {{d}} = {{ c+d }}</pre>
+
+<p>At <em>parse time</em>, Ractive generates an <a href="http://en.wikipedia.org/wiki/Abstract_syntax_tree">abstract syntax tree</a> (AST) from these expressions, to verify that it&#39;s a valid expression and to extract any references that are used. It then &#39;stringifies&#39; the AST, so that the expression can later be compiled into a function.</p>
+<p>As anyone who has seen minified JavaScript can attest, JavaScript cares not one fig what your variables are called. It also doesn&#39;t care about whitespace. So both of the expressions can be stringified the same way:</p>
+<pre class="prettyprint lang-js">"_0+_1"</pre>
+
+<p>(To minimise the risk of accidentally breaking things by including a string or property name in the expression that contains an underscore followed by an integer, we write the sequence as <code>${0}+${1}</code> during transportation from parser to renderer.)</p>
+<p>When we <em>evaluate</em> <code>{{ a + b }}</code> or <code>{{ c+d }}</code>, we can therefore use the same function but with different arguments. Recognising this, the function only gets compiled once, after which it is cached. (The cache is shared between all Ractive instances on the page.) Further, the result of the evaluation is itself cached (until one or more of the dependencies change), so you can repeat expressions as often as you like without creating unnecessary work.</p>
+<p>All of this means that you could have an expression within a list section that was repeated 10,000 times, and the corresponding function would be created once <em>at most</em>, and only called when necessary.</p>
+<h2 id="the-this-reference">The <code>this</code> reference</h2>
+<p>Within an expression, you can use <code>this</code> to refer to the current <em>context</em>:</p>
+<pre class="prettyprint lang-html">&lt;ul&gt;
+  {{#items}}
+    &lt;!-- here, `this` means 'the current array member' --&gt;
+    &lt;li&gt;{{this.toUpperCase()}}&lt;/li&gt;
+  {{/items}}
+&lt;/ul&gt;</pre>
+
+<p>In regular mustache, we have something called the <em>implicit iterator</em> &ndash; <code>{{.}}</code> &ndash; which does the same thing. Ractive allows you to use <code>this</code> in place of <code>.</code> for purely aesthetic reasons.</p>
+<h2 id="supported-global-objects">Supported global objects</h2>
+<ul>
+<li><code>Array</code></li>
+<li><code>Date</code></li>
+<li><code>JSON</code></li>
+<li><code>Math</code></li>
+<li><code>NaN</code></li>
+<li><code>RegExp</code></li>
+<li><code>decodeURI</code></li>
+<li><code>decodeURIComponent</code></li>
+<li><code>encodeURI</code></li>
+<li><code>encodeURIComponent</code></li>
+<li><code>isFinite</code></li>
+<li><code>isNaN</code></li>
+<li><code>null</code></li>
+<li><code>parseFloat</code></li>
+<li><code>parseInt</code></li>
+<li><code>undefined</code></li>
+</ul>
+</main>
+
+	
+	<script src="../js/prettify.js"></script>
+	<script>prettyPrint();
+
+		// Googlytics
+		(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+		ga('create', 'UA-5602942-6', 'ractivejs.org');
+		ga('send', 'pageview');</script></body></html>

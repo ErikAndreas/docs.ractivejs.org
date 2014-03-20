@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+
+	<link rel="icon" type="image/png" href="../favicon.png">
+
+	<title>Events | Docs | Ractive.js</title>
+
+	
+	<link href="http://fonts.googleapis.com/css?family=Source+Code+Pro:400,700,900" rel="stylesheet" type="text/css">
+	<link rel="stylesheet" href="../min.css"></head>
+
+<body class="example"><header class="docs-header"><nav><a href="http://ractivejs.org">&laquo; back to ractivejs.org</a>
+			<a class="edit-link" href="https://github.com/RactiveJS/docs.ractivejs.org/edit/master/docs/0.3.9/Events.md"><span>edit this page</span></a></nav>
+
+		<h1>Events</h1></header>
+
+	<main><div class="breadcrumbs"><a href="ractive-js-documentation">Home</a> &raquo; <a href="api-reference">API Reference</a> &raquo; <a href="events">Events</a></div>
+
+<p>Like many libraries, Ractive implements the <a href="http://addyosmani.com/blog/understanding-the-publishsubscribe-pattern-for-greater-javascript-scalability/">publish/subscribe</a> mechanism to allow you to trigger behaviour at certain points.</p>
+<p>There are three types of events &ndash; standard events, proxy events, and custom events. They all use the same interface &ndash; <a href="ractive-on">ractive.on()</a>:</p>
+<pre class="prettyprint lang-js">ractive = new Ractive({
+  el: myContainer,
+  template: myTemplate
+});
+
+ractive.on( 'teardown', function () {
+  alert( 'Bye!' );
+});</pre>
+
+<p>In all cases, event handlers will be called with <code>ractive</code> as <code>this</code>.</p>
+<h2 id="standard-events">Standard events</h2>
+<p>Standard events are those emitted by all Ractive instances:</p>
+<h3 id="set">set</h3>
+<p>Fired whenever <a href="ractive-set">ractive.set()</a> is called. The handler&#39;s arguments will be <code>(keypath, value)</code> or <code>(map)</code> depending on the arguments to <a href="ractive-set">ractive.set()</a>.</p>
+<h3 id="update">update</h3>
+<p>Fired whenever <a href="ractive-update">ractive.update()</a> is called, with <code>(keypath)</code> as the sole argument (unless no keypath was specified, in which case there are no arguments).</p>
+<h3 id="teardown">teardown</h3>
+<p>Fired whenever <a href="ractive-teardown">ractive.teardown()</a> is called. No arguments.</p>
+<h2 id="proxy-events">Proxy events</h2>
+<p>Proxy events are a convenient way of handling user interaction. Instead of doing <code>someElement.addEventListener( eventName, handler )</code> or <code>$( someSelector ).on( eventName, handler )</code>, you can write the name of a <em>proxy event</em> right into your template:</p>
+<pre class="prettyprint lang-html">&lt;button on-click='activate'&gt;Activate!&lt;/button&gt;
+&lt;button on-click='deactivate'&gt;Deactivate!&lt;/button&gt;</pre>
+
+<pre class="prettyprint lang-js">ractive = new Ractive({
+  el: myContainer,
+  template: myTemplate
+});
+
+ractive.on({
+  activate: function ( event ) {
+    // do something
+  },
+  deactivate: function ( event ) {
+    // do something
+  }
+});</pre>
+
+<p>This way we don&#39;t have to bother traversing the DOM or storing references to elements and handlers. We also don&#39;t need to worry about removing event handlers when we detach chunks of the DOM &ndash; Ractive takes care of it.</p>
+<p>Proxy event handlers receive an <code>event</code> argument. This isn&#39;t the same as the <code>event</code> argument you&#39;d receive in a traditional handler (i.e. bound with <code>node.addEventListener</code> or <code>$(node).on()</code> etc), but an object with five properties:</p>
+<ul>
+<li><code>node</code> &ndash; the relevant element</li>
+<li><code>original</code> &ndash; the underlying DOM event (useful for <code>event.original.preventDefault()</code> etc)</li>
+<li><code>keypath</code> &ndash; the keypath of the current context</li>
+<li><code>context</code> &ndash; the value of <code>ractive.get(event.keypath)</code></li>
+<li><code>index</code> &ndash; a map of index references</li>
+</ul>
+<p><em>TODO &ndash; explain what the hell the last three of those things meant... In the meantime folks, do a <code>console.log( event )</code> inside your handlers and all will be revealed!</em></p>
+<p>Because of the way proxy events work, they more or less eliminate the need for event delegation.</p>
+<p>Any standard DOM event that an element supports can be used (e.g. <code>on-mouseover=&#39;highlight&#39;</code>, <code>on-touchstart=&#39;dragstart&#39;</code>, <code>on-blur=&#39;submit&#39;</code>, <code>on-error=&#39;loadFallbackImage&#39;</code>, and so on), as can non-standard events defined in <a href="ractive-events">ractive-events</a> such as <code>on-tap</code>.</p>
+<p><em>TODO &ndash; chained proxy events, additional arguments in custom event definitions</em></p>
+<h2 id="custom-events">Custom events</h2>
+<p>You can easily create events of your own with <a href="ractive-fire">ractive.fire()</a>. This is most useful in the context of subclasses created with <a href="ractive-extend">Ractive.extend()</a>.</p>
+<p>In this example, we respond to the user clicking on an item by firing a <code>selected</code> event with the item data as the first (and only) argument:</p>
+<pre class="prettyprint lang-html">&lt;div class='catalogue'&gt;
+  {{#items:i}}
+    &lt;div on-tap='select' data-index='{{i}}'&gt;
+      {{&gt;content}}
+    &lt;/div&gt;
+  {{/items}}
+&lt;/div&gt;</pre>
+
+<pre class="prettyprint lang-js">var Catalogue = Ractive.extend({
+  template: catalogueTemplate,
+  partials: { content: contentPartial }, // pretend we made one
+  init: function ( options ) {
+    var self = this, items = options.items;
+
+    this.on( 'select', function ( event ) {
+      var index = event.node.getAttribute( 'data-index' );
+      self.fire( 'selected', items[ index ] );
+    });
+  }
+});</pre>
+
+</main>
+
+	
+	<script src="../js/prettify.js"></script>
+	<script>prettyPrint();
+
+		// Googlytics
+		(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+		ga('create', 'UA-5602942-6', 'ractivejs.org');
+		ga('send', 'pageview');</script></body></html>

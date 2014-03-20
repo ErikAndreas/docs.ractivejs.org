@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+
+	<link rel="icon" type="image/png" href="../favicon.png">
+
+	<title>Observers | Docs | Ractive.js</title>
+
+	
+	<link href="http://fonts.googleapis.com/css?family=Source+Code+Pro:400,700,900" rel="stylesheet" type="text/css">
+	<link rel="stylesheet" href="../min.css"></head>
+
+<body class="example"><header class="docs-header"><nav><a href="http://ractivejs.org">&laquo; back to ractivejs.org</a>
+			<a class="edit-link" href="https://github.com/RactiveJS/docs.ractivejs.org/edit/master/docs/0.3.9/Observers.md"><span>edit this page</span></a></nav>
+
+		<h1>Observers</h1></header>
+
+	<main><div class="breadcrumbs"><a href="ractive-js-documentation">Home</a> &raquo; <a href="glossary">Glossary</a> &raquo; <a href="observers">Observers</a></div>
+
+<h2 id="like-publish-subscribe-but-different">Like publish/subscribe, but different</h2>
+<p>A common pattern in modern JavaScript is to make models <em>observable</em>, using the traditional <a href="http://addyosmani.com/blog/understanding-the-publishsubscribe-pattern-for-greater-javascript-scalability/">publish/subscribe</a> mechanism.</p>
+<p>For example, you can observe changes to attributes within a Backbone Model like so:</p>
+<pre class="prettyprint lang-js">model = Backbone.Model({ myValue: 1 });
+
+model.on( 'change:myValue', function ( model, value, options ) {
+  alert( 'myValue changed to ' + value );
+});
+
+model.set( 'myValue', 2 ); // alerts 'myValue changed to 2'</pre>
+
+<p>This works because <code>Backbone.Model.prototype</code> inherits from <code>Backbone.Events</code>.</p>
+<p>Ractive implements pub/sub with <a href="ractive-on">ractive.on()</a>, <a href="ractive-off">ractive.off()</a> and <a href="ractive-fire">ractive.fire()</a> &ndash; see <a href="events">Events</a> for more info.</p>
+<h2 id="observing-models-with-nested-properties">Observing models with nested properties</h2>
+<p>But the normal pub/sub mechanism won&#39;t work for monitoring data changes with Ractive, because our data can contain nested properties. It&#39;s no good subscribing to a <code>change:foo.bar</code> event, if <code>foo.bar</code> can change as a result of <code>foo</code> changing.</p>
+<p>So instead, we introduce the concept of <em>observers</em>.</p>
+<p>An observer observes a particular <a href="keypaths">keypath</a>, and is <em>notified</em> when the value of its keypath changes, whether directly or indirectly (because an <em>upstream</em> or <em>downstream</em> keypath changed). You create one with <code>ractive.observe()</code>.</p>
+<p>Here&#39;s an example:</p>
+<pre class="prettyprint lang-js">ractive = new Ractive({
+  el: myContainer,
+  template: myTemplate,
+  data: {
+    foo: { bar: 1 }
+  }
+});
+
+// The observer will be initialised with ( currentValue, undefined ) unless
+// we pass a third `options` argument in which `init` is `false`. In other
+// words this will alert 'foo.bar changed to 1'
+observer = ractive.observe( 'foo.bar', function ( newValue, oldValue, keypath ) {
+  alert( keypath + ' changed to ' + newValue );
+});
+
+ractive.set( 'foo.bar', 2 ); // alerts 'foo.bar changed to 2'
+ractive.get( 'foo' ); // returns { bar: 2 }
+
+ractive.set( 'foo', { bar: 3 }); // alerts 'foo.bar changed to 3'
+ractive.get( 'foo.bar' ); // returns 3
+
+observer.cancel();
+
+ractive.set( 'foo.bar', 4 ); // alerts nothing; the observer was cancelled</pre>
+
+<p>Observers are most useful in the context of <a href="two-way-binding">two‐way binding</a>.</p>
+<h2 id="a-gotcha-to-be-aware-of">A &#39;gotcha&#39; to be aware of</h2>
+<p>Observers will be notified whenever the new value is not equal to the old value &ndash; <em>sort of</em>.</p>
+<p>What does &#39;not equal&#39; mean? Well, with <em>primitive values</em> such as strings and numbers, that&#39;s easy &ndash; they&#39;re either identical (in the <code>===</code> sense) or they&#39;re not.</p>
+<p>With objects and arrays (hereafter, just &#39;objects&#39;, since that&#39;s what arrays technically are), it&#39;s not so straightforward:</p>
+<pre class="prettyprint lang-js">a = { one: 1, two: 2, three: 3 };
+b = { one: 1, two: 2, three: 3 };
+
+alert( a === b ); // alerts 'false' &ndash; they look the same, but they ain't
+
+b = a;
+b.four = 4;
+
+alert( a === b ); // alerts 'true'. Hang on, `a` didn't have a 'four' property?
+alert( a.four ); // alerts '4'. Oh. Right.</pre>
+
+<p>So one the one hand, objects which look identical aren&#39;t. On the other, you can set a property of an object and have no idea whether doing so resulted in a change.</p>
+<p>There are two possible responses to this problem. First, we could do a &#39;deep clone&#39; of an object whenever we do <code>ractive.set(keypath, object)</code>, using an algorithm similar to <a href="http://api.jquery.com/jQuery.extend/#jQuery-extend-deep-target-object1-objectN">jQuery extend</a>. That would mean any references you held to <code>object</code> would become irrelevant. It would also mean a whole load of extra computation, and probably some very strange behaviour with cyclical data structures. No thanks.</p>
+<p>The second is to sidestep the issue, and simply state that for the purposes of determining whether to notify observers, <strong>no two objects are equal, even when they&#39;re identical</strong> (unless they&#39;re both <code>null</code>, of course &ndash; since <code>typeof null === &#39;object&#39;</code> due to a <a href="http://www.2ality.com/2013/10/typeof-null.html">bug in the language</a>).</p>
+<p>This is the safest, sanest behaviour, but it can lead to unexpected behaviour in one situation &ndash; accessing properties within an observer:</p>
+<pre class="prettyprint lang-js">obj = { a: { b: { c: 1 } } };
+
+ractive = new Ractive({
+  el: myContainer,
+  template: myTemplate,
+  data: { obj: obj }
+});
+
+// We observe 'obj.a.b.c' indirectly, and directly
+ractive.observe({
+  'obj': function ( newObj, oldObj ) {
+    alert( 'Indirect observer: changed from ' + oldObj.a.b.c + ' to ' + newObj.a.b.c );
+  },
+  'obj.a.b.c': function ( newC, oldC ) {
+    alert( 'Direct observer: changed from ' + oldC + ' to ' + newC );
+  }
+});
+
+obj.a.b.c = 2;
+
+// The next line will cause two alerts:
+//   'Direct observer: changed from 1 to 2'
+//   'Indirect observer: changed from 2 to 2' &ndash; because oldObj === newObj
+ractive.set( 'obj', obj );</pre>
+
+<p>This is definitely an edge case, but one that it&#39;s worth being aware of.</p>
+</main>
+
+	
+	<script src="../js/prettify.js"></script>
+	<script>prettyPrint();
+
+		// Googlytics
+		(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+		ga('create', 'UA-5602942-6', 'ractivejs.org');
+		ga('send', 'pageview');</script></body></html>

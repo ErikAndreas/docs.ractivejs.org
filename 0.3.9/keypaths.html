@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+
+	<link rel="icon" type="image/png" href="../favicon.png">
+
+	<title>Keypaths | Docs | Ractive.js</title>
+
+	
+	<link href="http://fonts.googleapis.com/css?family=Source+Code+Pro:400,700,900" rel="stylesheet" type="text/css">
+	<link rel="stylesheet" href="../min.css"></head>
+
+<body class="example"><header class="docs-header"><nav><a href="http://ractivejs.org">&laquo; back to ractivejs.org</a>
+			<a class="edit-link" href="https://github.com/RactiveJS/docs.ractivejs.org/edit/master/docs/0.3.9/Keypaths.md"><span>edit this page</span></a></nav>
+
+		<h1>Keypaths</h1></header>
+
+	<main><div class="breadcrumbs"><a href="ractive-js-documentation">Home</a> &raquo; <a href="glossary">Glossary</a> &raquo; <a href="keypaths">Keypaths</a></div>
+
+<p>The main way to interact with a Ractive instance is by setting <em>keypaths</em>. A keypath is a string representing the location of a piece of data:</p>
+<pre class="prettyprint lang-js">ractive = new Ractive({
+  el: myContainer,
+  template: myTemplate,
+  data: {
+    foo: {
+      bar: 'baz'
+    }
+  }
+});
+
+// Simple keypath
+ractive.get( 'foo' ); // returns { bar: 'baz' }
+
+// Compound keypath
+ractive.get( 'foo.bar' ); // returns 'baz'</pre>
+
+<h2 id="upstream-and-downstream-keypaths">Upstream and downstream keypaths</h2>
+<p>In the example above, we say that <code>&#39;foo.bar&#39;</code> is a <em>downstream keypath</em> of <code>&#39;foo&#39;</code>, while <code>&#39;foo&#39;</code> is an <em>upstream keypath</em> of <code>&#39;foo.bar&#39;</code>.</p>
+<h2 id="array-versus-dot-notation">Array versus dot notation</h2>
+<p>The <code>&#39;foo.bar&#39;</code> keypath is an example of <em>dot notation</em>. With arrays, you can use dot notation or <em>array notation</em>, which may feel more familiar (internally, it gets converted to dot notation):</p>
+<pre class="prettyprint lang-js">ractive = new Ractive({
+  el: myContainer,
+  template: myTemplate,
+  data: {
+    list: [ 'a', 'b', 'c' ]
+  }
+});
+
+// Array notation
+ractive.get( 'list[0]' ); // returns 'a'
+
+// Dot notation
+ractive.get( 'list.0' ); // also returns 'a'</pre>
+
+<h2 id="missing-properties">Missing properties</h2>
+<p>Ordinarily in JavaScript, trying to access a child property of an object that didn&#39;t exist would cause an error:</p>
+<pre class="prettyprint lang-js">data = { numbers: [ 1, 2, 3 ]};
+data.letters[0]; // throws an error &ndash; cannot read property '0' of undefined</pre>
+
+<p>Within Ractive, this will simply return <code>undefined</code>:</p>
+<pre class="prettyprint lang-js">ractive = new Ractive({
+  el: myContainer,
+  template: myTemplate,
+  data: {
+    numbers: [ 1, 2, 3 ]
+  }
+});
+
+ractive.get( 'letters[0]' ); // returns undefined</pre></main>
+
+	
+	<script src="../js/prettify.js"></script>
+	<script>prettyPrint();
+
+		// Googlytics
+		(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+		ga('create', 'UA-5602942-6', 'ractivejs.org');
+		ga('send', 'pageview');</script></body></html>

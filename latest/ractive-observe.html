@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+
+	<link rel="icon" type="image/png" href="../favicon.png">
+
+	<title>ractive.observe() | Docs | Ractive.js</title>
+
+	
+	<link href="http://fonts.googleapis.com/css?family=Source+Code+Pro:400,700,900" rel="stylesheet" type="text/css">
+	<link rel="stylesheet" href="../min.css"></head>
+
+<body class="example"><header class="docs-header"><nav><a href="http://ractivejs.org">&laquo; back to ractivejs.org</a>
+			<a class="edit-link" href="https://github.com/RactiveJS/docs.ractivejs.org/edit/master/docs/0.3.9/ractive.observe().md"><span>edit this page</span></a></nav>
+
+		<h1>ractive.observe()</h1></header>
+
+	<main><div class="breadcrumbs"><a href="ractive-js-documentation">Home</a> &raquo; <a href="api-reference">API reference</a> &raquo; <a href="ractive-observe">ractive.observe()</a></div>
+
+<p>Observes the data at a particular <a href="keypaths">keypath</a>. Unless specified otherwise, the <em>observer</em> will be <em>initialised</em> once as soon as you create the observer, with <code>undefined</code> as <code>oldValue</code>. Thereafter it will be <em>notified</em> whenever the <em>observed keypath</em> changes.</p>
+<p>See <a href="observers">Observers</a> for more detail.</p>
+<blockquote>
+<h3 id="ractive-observe-keypath-callback-options-">ractive.observe( keypath, callback[, options ])</h3>
+<p>Returns an object with a <code>cancel</code> method, for cancelling the observer</p>
+<blockquote>
+<h4 id="-keypath-string-"><strong>keypath</strong> <em><code>String</code></em></h4>
+<p>The <a href="keypaths">keypath</a> to observe. Any of the keys in this keypath can be a <code>*</code> character, which is treated as a wildcard.</p>
+<h4 id="-callback-function-"><strong>callback</strong> <em><code>Function</code></em></h4>
+<p>The function that will be called, with <code>newValue</code>, <code>oldValue</code> and <code>keypath</code> as arguments (see <a href="observers">Observers</a> for more nuance regarding these arguments), whenever the observed keypath changes value. By default the function will be called with <code>ractive</code> as <code>this</code></p>
+<h4 id="options-object-">options <em><code>Object</code></em></h4>
+<blockquote>
+<h4 id="init-boolean-">init <em><code>Boolean</code></em></h4>
+<p>Defaults to <code>true</code>. Whether or not to initialise the observer, i.e. call the function with the current value of <code>keypath</code> as the first argument and <code>undefined</code> as the second</p>
+<h4 id="defer-boolean-">defer <em><code>Boolean</code></em></h4>
+<p>Defaults to <code>false</code>, in which case observers will fire before any DOM changes take place. If <code>true</code>, the observer will fire once the DOM has been updated.</p>
+<h4 id="context">context</h4>
+<p>Defaults to <code>ractive</code>. The context the observer is called in (i.e. the value of <code>this</code>)</p>
+<h4 id="debug-boolean-">debug <em><code>Boolean</code></em></h4>
+<p>Defaults to <code>false</code> &ndash; exceptions that are thrown within observers are handled. This is useful when observing uninitialised keypaths when you don&#39;t want to litter your code with <code>if (foo !== undefined) { /*...*/ }</code>, but you may prefer to handle errors yourself, in which case use <code>true</code>.</p>
+</blockquote>
+</blockquote>
+<h3 id="ractive-observe-map-options-">ractive.observe( map[, options ])</h3>
+<p>Returns an object with a <code>cancel</code> method, for cancelling all observers</p>
+<blockquote>
+<h4 id="-map-object-"><strong>map</strong> <em><code>Object</code></em></h4>
+<p>A map of <code>keypath: observer</code> pairs</p>
+<h4 id="options-object-">options <em><code>Object</code></em></h4>
+<p>As above.</p>
+</blockquote>
+</blockquote>
+</main>
+
+	
+	<script src="../js/prettify.js"></script>
+	<script>prettyPrint();
+
+		// Googlytics
+		(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+		ga('create', 'UA-5602942-6', 'ractivejs.org');
+		ga('send', 'pageview');</script></body></html>

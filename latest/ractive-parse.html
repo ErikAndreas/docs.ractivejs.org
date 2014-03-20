@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+
+	<link rel="icon" type="image/png" href="../favicon.png">
+
+	<title>Ractive.parse() | Docs | Ractive.js</title>
+
+	
+	<link href="http://fonts.googleapis.com/css?family=Source+Code+Pro:400,700,900" rel="stylesheet" type="text/css">
+	<link rel="stylesheet" href="../min.css"></head>
+
+<body class="example"><header class="docs-header"><nav><a href="http://ractivejs.org">&laquo; back to ractivejs.org</a>
+			<a class="edit-link" href="https://github.com/RactiveJS/docs.ractivejs.org/edit/master/docs/0.3.9/Ractive.parse().md"><span>edit this page</span></a></nav>
+
+		<h1>Ractive.parse()</h1></header>
+
+	<main><div class="breadcrumbs"><a href="ractive-js-documentation">Home</a> &raquo; <a href="api-reference">API reference</a> &raquo; <a href="ractive-parse">Ractive.parse()</a></div>
+
+<p>Before templates can be used, they must be parsed. Parsing involves reading in a template string and converting it to a tree-like data structure, much like a browser&#39;s parser would.</p>
+<p>Ordinarily, parsing happens automatically. However you can use <code>Ractive.parse()</code> as a standalone function if, for example, you want to parse templates as part of your build process (it works in Node.js). See also <a href="using-ractive-with-requirejs">Using Ractive with RequireJS</a>.</p>
+<p>The output of <code>Ractive.parse()</code> is an array or object (depending on whether the template contains <a href="partials#inline-partials">inline partials</a> or not). Here&#39;s an example:</p>
+<pre class="prettyprint lang-html">&lt;div class='gallery'&gt;
+  {{#items}}
+    &lt;!-- comments get stripped out of the template --&gt;
+    &lt;figure proxy-tap='select' intro='staggered'&gt;
+      &lt;img class='thumbnail' src='assets/images/{{id}}.jpg'&gt;
+      &lt;figcaption&gt;{{( i+1 )}}: {{description}}&lt;/figcaption&gt;
+    &lt;/figure&gt;
+  {{/items}}
+&lt;/div&gt;</pre>
+
+<p>...gets turned into...</p>
+<pre class="prettyprint lang-js">[{"t":7,"e":"div","a":{"class":"gallery"},"f":[{"t":4,"r":"items","i":"i","f":[" ",{"t":7,"e":"figure","a":{"intro":"staggered"},"f":[{"t":7,"e":"img","a":{"class":"thumbnail","src":["assets/images/",{"t":2,"r":"id","p":4},".jpg"]}}," ",{"t":7,"e":"figcaption","f":[{"t":2,"x":{"r":["i"],"s":"❖0+1"},"p":4},": ",{"t":2,"r":"description","p":4}]}],"v":{"tap":"select"}}," "],"p":1}]}]</pre>
+
+<p>This contains everything Ractive needs to construct its bit of the DOM and set up data-binding, proxy event handlers, and transitions.</p>
+<p>It&#39;s not designed to be human-readable or -editable, but rather to use as few bytes as possible. Typically a parsed template is only about 30-40% larger than the string version. (There is some useful testing to be done to see whether the tradeoff of piping the extra few bytes to users is worth the few milliseconds of parsing that it will save!)</p>
+<p>Wherever possible (in other words, with whichever bits of a template don&#39;t use Ractive-specific features), the template will be stored as plain HTML.</p>
+<p>You use <code>Ractive.parse()</code> like so:</p>
+<pre class="prettyprint lang-js">// options are, well, optional
+parsed = Ractive.parse( template, options );</pre>
+
+
+<h2 id="parser-options">Parser options</h2>
+<blockquote>
+<h3 id="preservewhitespace-boolean-">preserveWhitespace <em><code>Boolean</code></em></h3>
+<p>Defaults to <code>false</code>. Whether or not to preserve whitespace in templates. (Whitespace in <code>&lt;pre&gt;</code> elements is always preserved.)</p>
+<h3 id="sanitize-boolean-or-object-">sanitize <em><code>Boolean</code> or <code>Object</code></em></h3>
+<p>Defaults to <code>false</code>. If <code>true</code>, certain elements will be stripped from templates &ndash; <code>&lt;applet&gt;</code>, <code>&lt;base&gt;</code>, <code>&lt;basefont&gt;</code>, <code>&lt;body&gt;</code>, <code>&lt;frame&gt;</code>, <code>&lt;frameset&gt;</code>, <code>&lt;head&gt;</code>, <code>&lt;html&gt;</code>, <code>&lt;isindex&gt;</code>, <code>&lt;link&gt;</code>, <code>&lt;meta&gt;</code>, <code>&lt;noframes&gt;</code>, <code>&lt;noscript&gt;</code>, <code>&lt;object&gt;</code>, <code>&lt;param&gt;</code>, <code>&lt;script&gt;</code>, <code>&lt;style&gt;</code> and <code>&lt;title&gt;</code> &ndash; as will event attributes (e.g. <code>onclick</code>). Alternatively, pass in an object with an <code>elements</code> property containing an array of blacklisted elements, and an optional <code>eventAttributes</code> boolean (<code>true</code> means &#39;disallow event attributes&#39;).</p>
+</blockquote>
+</main>
+
+	
+	<script src="../js/prettify.js"></script>
+	<script>prettyPrint();
+
+		// Googlytics
+		(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+		ga('create', 'UA-5602942-6', 'ractivejs.org');
+		ga('send', 'pageview');</script></body></html>

@@ -1,0 +1,309 @@
+@font-face {
+  font-family: 'Voltaire';
+  src: url('assets/fonts/Voltaire.eot');
+  src: url('assets/fonts/Voltaire.eot?#iefix') format('embedded-opentype'), url('assets/fonts/Voltaire.woff') format('woff'), url('assets/fonts/Voltaire.ttf') format('truetype'), url('assets/fonts/Voltaire.svg#webfont') format('svg'); }
+
+@font-face {
+  font-family: 'Poiret One';
+  src: url('assets/fonts/PoiretOne.eot');
+  src: url('assets/fonts/PoiretOne.eot?#iefix') format('embedded-opentype'), url('assets/fonts/PoiretOne.woff') format('woff'), url('assets/fonts/PoiretOne.ttf') format('truetype'), url('assets/fonts/PoiretOne.svg#webfont') format('svg'); }
+
+body {
+  font-size: 16px;
+  color: #353535;
+  line-height: 1.5;
+  padding: 2em 1em 2em 1em;
+  font-family: 'Baskerville', 'Book Antiqua', 'Georgia';
+  width: 100%;
+  max-width: 48em;
+  margin: 0 auto;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box; }
+
+main {
+  position: relative; }
+  main .aside {
+    display: none; }
+  @media (min-width: 50em) {
+    main {
+      margin: 0 auto; }
+      main p {
+        padding-right: 18em; }
+      main .aside {
+        display: block; } }
+
+a {
+  color: #729d34;
+  text-decoration: none; }
+
+a:hover {
+  text-decoration: underline; }
+
+a:visited {
+  color: #729d34; }
+
+a.stealth {
+  color: #353535; }
+
+.main:after {
+  content: '';
+  display: table;
+  clear: both; }
+
+h3 {
+  margin: 0 0 0.5em 0; }
+
+p {
+  margin: 0 0 1.5em 0; }
+
+aside {
+  position: absolute;
+  width: 16em;
+  right: 0;
+  font-family: 'Helvetica Neue', 'Arial', 'sans serif';
+  color: #999;
+  display: none; }
+  @media (min-width: 50em) {
+    aside {
+      display: block; } }
+
+.aside-inner {
+  position: absolute;
+  width: 100%;
+  bottom: 1.5em; }
+  .aside-inner p {
+    font-size: 0.8em;
+    padding: 0; }
+  .aside-inner p:last-child {
+    margin: 0; }
+  .aside-inner code {
+    background-color: #f9f9f9;
+    border: none;
+    font-size: 1em;
+    color: #666; }
+
+pre {
+  white-space: pre;
+  font-family: 'Source Code Pro', monospace;
+  font-size: 14px;
+  background-color: #f9fcf6;
+  display: block;
+  padding: 0.5em;
+  overflow-x: auto;
+  margin: 0 0 1em 0; }
+  pre:before {
+    display: block;
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 0.5em;
+    font-family: 'Voltaire', 'Arial';
+    font-weight: bold;
+    margin-bottom: 1em;
+    color: #444; }
+  pre.lang-html:before {
+    content: 'html'; }
+  pre.lang-js:before {
+    content: 'javascript'; }
+  pre.lang-css:before {
+    content: 'css'; }
+
+code {
+  font-family: 'Source Code Pro', monospace;
+  border: 1px solid #eee;
+  border-radius: 0.2em;
+  background-color: #f9fcf6;
+  color: #444;
+  font-weight: normal;
+  font-size: 0.8em;
+  padding: 0.15em 0.3em;
+  position: relative; }
+
+pre code {
+  border: none;
+  border-radius: 0;
+  background-color: none;
+  color: inherit;
+  font-weight: inherit;
+  font-size: inherit;
+  padding: 0; }
+
+.prettyprinted {
+  color: #444; }
+
+.prettyprint .pln {
+  color: #444; }
+.prettyprint .pun {
+  color: #888; }
+.prettyprint .str {
+  color: #729d34; }
+.prettyprint .kwd {
+  color: #000064; }
+.prettyprint .typ {
+  color: #000064; }
+.prettyprint .tag {
+  color: #000064; }
+.prettyprint .atn {
+  color: #5050b4; }
+.prettyprint .atv {
+  color: #729d34; }
+.prettyprint .lit {
+  color: #960000; }
+.prettyprint .com {
+  color: #aaa; }
+.prettyprint.lang-js .pun {
+  color: #444; }
+
+.logo {
+  font-family: 'Voltaire', sans-serif; }
+
+.nav {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 0.5em; }
+
+a.edit-link {
+  float: right;
+  background: #729d34 url(assets/edit.png) no-repeat 0.4em 55%;
+  padding: 0em 0.5em 0em 1.5em;
+  background-size: 1em 1em;
+  border-radius: 0.2em;
+  color: white; }
+
+.edit-link span {
+  font-size: 0.8em;
+  color: white; }
+
+.menu, .small-menu {
+  background-color: #f9fcf6;
+  padding: 0.2em;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+  text-align: center;
+  margin: 0 0 2em 0; }
+  .menu:after, .small-menu:after {
+    content: '';
+    display: table;
+    clear: both; }
+  @media (max-width: 30em) {
+    .menu li {
+      display: block;
+      border-bottom: 1px solid #eee;
+      padding: 0.2em 0; }
+      .menu li:last-child, .menu .small-menu, .menu .small-menu {
+        border-bottom: none; } }
+  @media (min-width: 30em) {
+    .menu li {
+      display: inline-block; }
+      .menu li:after, .menu .small-menu, .menu .small-menu {
+        content: ' | ';
+        color: #888; }
+      .menu li:last-child:after, .menu .small-menu, .menu .small-menu {
+        content: ''; } }
+
+.small-menu {
+  margin-top: 0;
+  border-top: none; }
+  .small-menu p {
+    margin: 0.5em 0; }
+
+h1, h2 {
+  font-family: 'Voltaire', sans-serif;
+  font-weight: normal;
+  margin: 0;
+  line-height: 1; }
+
+h1 {
+  font-size: 3em; }
+  @media (min-width: 30em) {
+    h1 {
+      font-size: 4em; } }
+
+h2 {
+  font-size: 1.5em;
+  text-align: center;
+  border-bottom: 1px solid #eee;
+  margin: 3em 0 0.5em 0;
+  padding-bottom: 0.2em;
+  clear: both; }
+
+@media (min-width: 50em) {
+  main h2 {
+    text-align: left; } }
+
+.title {
+  text-align: center;
+  margin: 0 0 30px 0; }
+
+.title p {
+  font-family: 'Poiret One', 'Arial';
+  font-weight: 900;
+  margin: 0;
+  font-size: 1em; }
+  @media (min-width: 30em) {
+    .title p {
+      font-size: 1.2em; } }
+  @media (min-width: 40em) {
+    .title p {
+      font-size: 1.4em; } }
+
+.title img {
+  width: 50%;
+  max-width: 200px; }
+
+@media (min-width: 40em) {
+  .title br {
+    display: none; } }
+
+.docs-header h1 {
+  font-size: 3.2em; }
+.docs-header nav {
+  border-bottom: 1px solid #eee;
+  margin: 0 0 1em 0;
+  padding: 0 0 0.5em 0; }
+
+.breadcrumbs {
+  border-bottom: 1px solid #eee;
+  padding: 0.5em 0;
+  margin: 0 0 2em 0; }
+
+pre {
+  white-space: pre-wrap; }
+
+pre.lang-js, pre.lang-html {
+  white-space: pre; }
+
+main h2 {
+  margin: 2em 0 0.5em 0; }
+  main h2 code {
+    position: relative;
+    bottom: 0.1em; }
+main h3, main h4 {
+  font-family: 'Voltaire';
+  font-weight: normal;
+  margin: 1em 0 0.5em 0; }
+main blockquote {
+  padding: 0 0 0 1em;
+  margin: 0; }
+  main blockquote p {
+    padding: 0; }
+  main blockquote h3, main blockquote h4 {
+    position: relative;
+    left: -0.8em;
+    font-family: 'Source Code Pro', monospace; }
+    main blockquote h3 em, main blockquote h4 em {
+      font-style: normal;
+      font-size: 0.8em;
+      font-family: 'Baskerville', 'Book Antiqua', 'Georgia'; }
+    main blockquote h3 code, main blockquote h4 code {
+      background-color: #f9f9f9;
+      position: relative;
+      bottom: 0.1em; }
+  main blockquote h3 {
+    font-size: 1.25em; }
+  main blockquote h4 {
+    font-weight: normal; }
+  main blockquote blockquote {
+    border-left: 1px solid #eee;
+    padding: 0 0 0 2em;
+    margin: 0 0 0 0.2em; }

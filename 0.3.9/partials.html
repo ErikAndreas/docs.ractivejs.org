@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+
+	<link rel="icon" type="image/png" href="../favicon.png">
+
+	<title>Partials | Docs | Ractive.js</title>
+
+	
+	<link href="http://fonts.googleapis.com/css?family=Source+Code+Pro:400,700,900" rel="stylesheet" type="text/css">
+	<link rel="stylesheet" href="../min.css"></head>
+
+<body class="example"><header class="docs-header"><nav><a href="http://ractivejs.org">&laquo; back to ractivejs.org</a>
+			<a class="edit-link" href="https://github.com/RactiveJS/docs.ractivejs.org/edit/master/docs/0.3.9/Partials.md"><span>edit this page</span></a></nav>
+
+		<h1>Partials</h1></header>
+
+	<main><div class="breadcrumbs"><a href="ractive-js-documentation">Home</a> &raquo; <a href="glossary">Glossary</a> &raquo; <a href="partials">Partials</a></div>
+
+<p>A partial is a template snippet which can be inserted into templates, or indeed other partials. They help to keep templates uncluttered and easy to read. In this example, we&#39;re creating a <code>{{&gt;thumbnail}}</code> partial:</p>
+<pre class="prettyprint lang-html">&lt;!-- the main template --&gt;
+&lt;div class='gallery'&gt;
+  {{#items}}
+    {{&gt;thumbnail}}
+  {{/items}}
+&lt;/div&gt;</pre>
+
+<pre class="prettyprint lang-html">&lt;!-- the partial --&gt;
+&lt;figure class='thumbnail'&gt;
+  &lt;img src='assets/thumbnails/{{id}}.jpg'&gt;
+  &lt;figcaption&gt;{{description}}&lt;/figcaption&gt;
+&lt;/figure&gt;</pre>
+
+<p>There are several ways to use partials.</p>
+<h3 id="as-an-initialisation-option">As an initialisation option</h3>
+<p>You can specify partials when you create a Ractive instance:</p>
+<pre class="prettyprint lang-js">ractive = new Ractive({
+  el: myContainer,
+  template: myTemplate,
+  partials: { thumbnail: myThumbnailPartial }
+  data: { items: myItems }
+});</pre>
+
+<p>Here, <code>myThumbnailPartial</code> can be a <a href="templates">string template</a> or a <a href="preparsing">parsed template</a>.</p>
+<h3 id="as-a-globally-available-partial">As a globally available partial</h3>
+<p>Equally, you can make partials globally available by adding them to <a href="ractive-partials-global">Ractive.partials</a>:</p>
+<pre class="prettyprint lang-js">Ractive.partials.thumbnail = myThumbnailPartial;</pre>
+
+<p>Again, this can be a string template or parsed template &ndash; if a string, it will be parsed when it first gets used and stored as a parsed template thereafter.</p>
+<h3 id="as-a-script-tag">As a script tag</h3>
+<p>This method is particularly convenient if you don&#39;t want to load templates via AJAX:</p>
+<pre class="prettyprint lang-html">&lt;script id='thumbnail' type='text/ractive'&gt;
+  &lt;figure class='thumbnail'&gt;
+    &lt;img src='assets/thumbnails/{{id}}.jpg'&gt;
+    &lt;figcaption&gt;{{description}}&lt;/figcaption&gt;
+  &lt;/figure&gt;
+&lt;/script&gt;</pre>
+
+<p>The <code>type</code> attribute isn&#39;t important, as long as it exists and isn&#39;t <code>text/javascript</code>. All that matters is that it&#39;s a script tag whose <code>id</code> attribute matches the name of the partial.</p>
+<p>Internally, when a template requests the <code>{{&gt;thumbnail}}</code> partial, Ractive will look for it on <a href="ractive-partials-instance">ractive.partials</a>, then <a href="ractive-partials-global">Ractive.partials</a>, and if both of those fail it will then look for an element with an <code>id</code> of <code>thumbnail</code>. If it exists, it will parse its content and store it on <a href="ractive-partials-global">Ractive.partials</a>, to make subsequent lookups quicker.</p>
+<h3 id="inline-partials">Inline partials</h3>
+<p>It is also possible to embed partials within templates. Suppose you have a single <code>mainTemplate.html</code> file. You can define any partials within it by wrapping them in comments that follow this structure:</p>
+<pre class="prettyprint lang-html">&lt;div class='gallery'&gt;
+  {{#items}}
+    {{&gt;thumbnail}}
+  {{/items}}
+&lt;/div&gt;
+
+&lt;!-- {{&gt;thumbnail}} --&gt;
+&lt;figure class='thumbnail'&gt;
+  &lt;img src='assets/thumbnails/{{id}}.jpg'&gt;
+  &lt;figcaption&gt;{{description}}&lt;/figcaption&gt;
+&lt;/figure&gt;
+&lt;!-- {{/thumbnail}} --&gt;</pre>
+
+<p>In this case, the <code>thumbnail</code> partial won&#39;t be globally available &ndash; it will only be available to Ractive instances that use this template.</p>
+<h2 id="recursive-partials">Recursive partials</h2>
+<p>Partials can be used <em>recursively</em>:</p>
+<pre class="prettyprint lang-html">&lt;div class='fileSystem'&gt;
+  {{#root}}
+    {{&gt;folder}}
+  {{/root}}
+&lt;/div&gt;
+
+&lt;!-- {{&gt;folder}} --&gt;
+&lt;ul class='folder'&gt;
+  {{#files}}
+    {{&gt;file}}
+  {{/files}}
+&lt;/ul&gt;
+&lt;!-- {{/folder}} --&gt;
+
+&lt;!-- {{&gt;file}} --&gt;
+&lt;li class='file'&gt;
+  &lt;img class='icon-{{type}}'&gt;
+  &lt;span&gt;{{filename}}&lt;/span&gt;
+
+  &lt;!-- if this is actually a folder, embed the folder partial --&gt;
+  {{# type === 'folder' }}
+    {{&gt;folder}}
+  {{/ type === 'folder' }}
+&lt;/li&gt;
+&lt;!-- {{/file}} --&gt;</pre>
+
+<pre class="prettyprint lang-js">rv = new Ractive({
+  el: 'container',
+  template: '#myTemplate',
+  data: {
+    root: {
+      files: [
+        { type: 'jpg', filename: 'hello.jpg' },
+        { type: 'mp3', filename: 'NeverGonna.mp3' },
+        { type: 'folder', filename: 'subfolder', files: [
+          { type: 'txt', filename: 'README.txt' },
+          { type: 'folder', filename: 'rabbithole', files: [
+            { type: 'txt', filename: 'Inception.txt' }
+          ]}
+        ]}
+      ]
+    }
+  }
+});</pre>
+
+<p>In the example above, subfolders use the <code>{{&gt;folder}}</code> partial, which uses the <code>{{&gt;file}}</code> partial for each file, and if any of those files are folders, the <code>{{&gt;folder}}</code> partial will be invoked again, and so on until there are no more files.</p>
+<p>Beware of cyclical data structures! Ractive makes no attempt to detect cyclicality, and will happily continue rendering partials until the <a href="http://en.wikipedia.org/wiki/Big_Crunch">Big Crunch</a> (or your browser exceeds its maximum call stack size. Whichever is sooner).</p>
+<h2 id="injecting-partials">Injecting partials</h2>
+<p>One good use of partials is to vary the shape of a template according to some condition, the same way you might use <a href="http://en.wikipedia.org/wiki/Dependency_injection">dependency injection</a> elsewhere in your code.</p>
+<p>For example, you might offer a different view to mobile users:</p>
+<pre class="prettyprint lang-html">&lt;div class='main'&gt;
+  &lt;div class='content'&gt;
+    {{&gt;content}}
+  &lt;/div&gt;
+
+  &lt;div class='sidebar'&gt;
+    {{&gt;sidebar}}
+  &lt;/div&gt;
+&lt;/div&gt;</pre>
+
+<pre class="prettyprint lang-js">isMobile = /mobile/i.test( navigator.userAgent ); // please don't do this in real life!
+
+ractive = new Ractive({
+  el: myContainer,
+  template: myTemplate,
+  partials: {
+    content: isMobile ? mobileContentPartial : desktopContentPartial,
+    sidebar: isMobile ? mobileSidebarPartial : desktopSidebarPartial
+  }
+});</pre>
+
+<p>Or you might make it possible to <a href="ractive-extend">extend</a> a subclass without overriding its template:</p>
+<pre class="prettyprint lang-html">&lt;div class='modal-background'&gt;
+  &lt;div class='modal'&gt;
+    {{&gt;modalContent}}
+  &lt;/div&gt;
+&lt;/div&gt;</pre>
+
+<pre class="prettyprint lang-js">// Create a Modal subclass
+Modal = Ractive.extend({
+  template: modalTemplate,
+  init: function () {
+    var self = this, resizeHandler;
+
+    resizeHandler = function () {
+      self.center();
+    };
+
+    // when the window resizes, keep the modal horizontally and vertically centred
+    window.addEventListener( 'resize', resizeHandler );
+
+    // clean up after ourselves later
+    this.on( 'teardown', function () {
+      window.removeEventListener( 'resize', resizeHandler );
+    });
+
+    // manually call this.center() the first time
+    this.center();
+  },
+  center: function () {
+    // centering logic goes here
+  }
+});
+
+helloModal = new Modal({
+  el: document.body,
+  partials: {
+    modalContent: '&lt;p&gt;Hello!&lt;/p&gt;&lt;a class="modal-button" proxy-tap="close"&gt;Close&lt;/a&gt;'
+  }
+});
+
+helloModal.on( 'close', function () {
+  this.teardown();
+});</pre></main>
+
+	
+	<script src="../js/prettify.js"></script>
+	<script>prettyPrint();
+
+		// Googlytics
+		(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+		ga('create', 'UA-5602942-6', 'ractivejs.org');
+		ga('send', 'pageview');</script></body></html>

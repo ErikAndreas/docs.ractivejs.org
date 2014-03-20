@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+
+	<link rel="icon" type="image/png" href="../favicon.png">
+
+	<title>Transitions | Docs | Ractive.js</title>
+
+	
+	<link href="http://fonts.googleapis.com/css?family=Source+Code+Pro:400,700,900" rel="stylesheet" type="text/css">
+	<link rel="stylesheet" href="../min.css"></head>
+
+<body class="example"><header class="docs-header"><nav><a href="http://ractivejs.org">&laquo; back to ractivejs.org</a>
+			<a class="edit-link" href="https://github.com/RactiveJS/docs.ractivejs.org/edit/master/docs/0.3.9/Transitions.md"><span>edit this page</span></a></nav>
+
+		<h1>Transitions</h1></header>
+
+	<main><div class="breadcrumbs"><a href="ractive-js-documentation">Home</a> &raquo; <a href="plugins">Plugins</a> &raquo; <a href="transitions">Transitions</a></div>
+
+<p>Transitions allow you to control how elements are first rendered and how they are removed from the DOM. They are added with <code>intro</code> and <code>outro</code> directives, which look like attributes within a template (but are not rendered to the DOM as attributes):</p>
+<pre class="prettyprint lang-html">&lt;div intro='fade'&gt;This element will fade in gradually when it renders&lt;/div&gt;</pre>
+
+<p>This works because (or rather, if) Ractive is able to find a <code>fade</code> function on either <a href="ractive-transitions-instance">ractive.transitions</a> (i.e. instance-specific transitions) or <a href="ractive-transitions-global">Ractive.transitions</a> (i.e. globally-available transitions).</p>
+<p>To start using transitions, download them from the <a href="plugins">Plugins</a> page.</p>
+<h2 id="creating-transitions">Creating transitions</h2>
+<p>We&#39;re going to create a <code>flash</code> transition, that flashes text green on intro, and red on outro. To skip ahead and see the result, <a href="http://jsfiddle.net/rich_harris/Hf2ea/">open the JSFiddle</a>.</p>
+<p>All we need to do is create a function that receives a transition object, <code>t</code>. This function is called when a new element is added to the DOM (if it has an <code>intro=&quot;flash&quot;</code> directive), and when that element is removed from the DOM.</p>
+<p>Because transitions are generally asynchronous, we have to call <code>t.complete()</code> once they have finished.</p>
+<pre class="prettyprint lang-js">var flashTransition = function ( t ) {
+  if ( t.isIntro ) {
+    // we're entering the DOM
+  } else {
+    // we're leaving the DOM
+  }
+
+  doSomeAsynchronousWork().then( t.complete );
+};</pre>
+
+<h2 id="the-transition-object-t-">The transition object (<code>t</code>)</h2>
+<p>The <code>t</code> object has a few properties and methods designed to make creating transitions easier.</p>
+<blockquote>
+<h3 id="t-node">t.node</h3>
+<p>The node that&#39;s entering or leaving the DOM</p>
+<h3 id="t-isintro">t.isIntro</h3>
+<p>Should be self-explanatory...</p>
+<h3 id="t-name">t.name</h3>
+<p>The name of the transition (in our example, &#39;flash&#39;)</p>
+<h3 id="t-params">t.params</h3>
+<p>Transition parameters (see below). You won&#39;t normally need this, as they are supplied as arguments to the function.</p>
+<h3 id="t-complete-noreset-">t.complete([ noReset ])</h3>
+<p>You must call this within your transition function, otherwise Ractive has no idea whether a transition has finished or not</p>
+<blockquote>
+<h4 id="noreset-boolean-">noReset <em><code>Boolean</code></em></h4>
+<p>Defaults to <code>false</code>. Generally, you won&#39;t need this. If <code>true</code>, <code>t.resetStyle()</code> (see below) is not called, even if this is an intro transition.</p>
+</blockquote>
+<h3 id="t-getstyle-prop-">t.getStyle( prop )</h3>
+<p>A convenient way to get a particular style property for <code>t.node</code>. It uses <code>window.getComputedStyle()</code> (the <a href="legacy-builds">legacy builds</a> include a shim for old IE). Prefixes are applied automatically, so do <code>t.getStyle(&#39;transform&#39;)</code>, not <code>t.getStyle(&#39;-webkit-transform&#39;)</code> or whatever. You can use either camelcased or hyphenated styles (&#39;backgroundColor&#39; or &#39;background-color&#39;).</p>
+<blockquote>
+<h4 id="-prop-string-"><strong>prop</strong> <em><code>String</code></em></h4>
+<p>The style property to get the value of, e.g. <code>&#39;opacity&#39;</code></p>
+</blockquote>
+<h3 id="t-getstyle-props-">t.getStyle( props )</h3>
+<p>As above, but several properties simultaneously. Returns an <code>Object</code> containing a map of properties to values.</p>
+<blockquote>
+<h4 id="-props-array-"><strong>props</strong> <em><code>Array</code></em></h4>
+<p>A list of properties to get, e.g. <code>[&#39;width&#39;, &#39;height&#39;]</code>.</p>
+</blockquote>
+<h3 id="t-setstyle-prop-value-">t.setStyle( prop, value )</h3>
+<p>Sets a style on <code>t.node</code>. Again, you don&#39;t need to worry about prefixes, and you can use camelcased or hyphenated property names.</p>
+<blockquote>
+<h4 id="-prop-string-"><strong>prop</strong> <em><code>String</code></em></h4>
+<p>The style property to set, e.g. <code>&#39;color&#39;</code></p>
+<h4 id="-value-"><strong>value</strong></h4>
+<p>The value to set it to, e.g. <code>&#39;red&#39;</code></p>
+</blockquote>
+<h3 id="t-setstyle-props-">t.setStyle( props )</h3>
+<p>Sets several styles simultaneously.</p>
+<blockquote>
+<h4 id="-props-object-"><strong>props</strong> <em><code>Object</code></em></h4>
+<p>A map of properties to values, e.g. <code>{opacity: 0, transform: &#39;scale(0)&#39;}</code></p>
+</blockquote>
+<h3 id="t-animatestyle-prop-value-options-complete-">t.animateStyle( prop, value, options[, complete ])</h3>
+<p>Animates a style property, using CSS transitions.</p>
+<blockquote>
+<h4 id="-prop-string-"><strong>prop</strong> <em><code>String</code></em></h4>
+<p>The style to animate.</p>
+<h4 id="-value-"><strong>value</strong></h4>
+<p>The value to animate it to.</p>
+<h4 id="-options-object-"><strong>options</strong> <em><code>Object</code></em></h4>
+<blockquote>
+<h4 id="-duration-number-"><strong>duration</strong> <em><code>Number</code></em></h4>
+<p>The duration of the animation, in milliseconds</p>
+<h4 id="easing-string-">easing <em><code>String</code></em></h4>
+<p>Defaults to <code>&#39;linear&#39;</code>. Any <a href="http://cubic-bezier.com/#.17,.67,.83,.67">valid CSS timing function</a>, e.g. <code>ease-in-out</code>, or <code>cubic-bezier(.17,.67,.83,.67)</code></p>
+<h4 id="delay-number-">delay <em><code>Number</code></em></h4>
+<p>The number of milliseconds to wait before beginning the animation</p>
+</blockquote>
+<h4 id="complete-function-">complete <em><code>Function</code></em></h4>
+<p>A callback function that will be called when the animation is complete (or immediately, if there are no changes)</p>
+</blockquote>
+<h3 id="t-animatestyle-props-options-complete-">t.animateStyle( props, options[, complete ])</h3>
+<blockquote>
+<h4 id="-props-object-"><strong>props</strong> <em><code>Object</code></em></h4>
+<p>A map of properties to values.</p>
+<h4 id="-options-object-"><strong>options</strong> <em><code>Object</code></em></h4>
+<p>As above.</p>
+<h4 id="complete-function-">complete <em><code>Function</code></em></h4>
+<p>As above.</p>
+</blockquote>
+<h3 id="t-resetstyle-">t.resetStyle()</h3>
+<p>Resets the style of an element to how it was when you found it. Generally you won&#39;t need to use this directly, as it is called by <code>t.complete()</code> if the transition is an intro, unless you do <code>t.complete(true)</code>.</p>
+<h3 id="t-processparams-params-defaults-">t.processParams( params[, defaults ])</h3>
+<p>Interprets a parameters object or value according to the guidelines in the next section.</p>
+<blockquote>
+<h4 id="params-object-or-number-or-string-">params <em><code>Object</code> or <code>Number</code> or <code>String</code></em></h4>
+<p>An object with parameters, or either a) a number, which will be treated as a duration in milliseconds, or b) one of <code>&#39;fast&#39;</code> or <code>&#39;slow&#39;</code>, which indicate a duration of 200 or 600 milliseconds respectively.</p>
+<h4 id="defaults-object-">defaults <em><code>Object</code></em></h4>
+<p>The default options for the transition. Any options on this object that are not specified in the directive will be added to the return value.</p>
+</blockquote>
+</blockquote>
+<h2 id="parameters">Parameters</h2>
+<p>Users of your transition can pass parameters like so:</p>
+<pre class="prettyprint lang-html">&lt;p intro='flash:{duration:{{transitionDuration}},color:"blue"}'&gt;
+  this text will flash blue on intro
+&lt;/p&gt;</pre>
+
+<p>In this case, the transition function&#39;s second argument will be an object with a <code>duration</code> property, whose value is whatever <code>transitionDuration</code> is at the time the transition happens, and a <code>color</code> property whose value is <code>&quot;blue&quot;</code>.</p>
+<p>By convention, if a user passes a single numeric argument, or the string &#39;fast&#39; or &#39;slow&#39;, it should be treated as a duration. You can use <code>t.processParams(params)</code> to do this.</p>
+<pre class="prettyprint lang-html">&lt;p intro='flash:500'&gt;this text will flash green (default colour) for 500 milliseconds&lt;/p&gt;
+&lt;p intro='flash:fast'&gt;this text will flash for 200 milliseconds&lt;/p&gt;
+&lt;p intro='flash:slow'&gt;this text will flash for 600 milliseconds&lt;/p&gt;</pre>
+
+<h2 id="our-example-flash-transition">Our example flash transition</h2>
+<p>You can see the finished product at <a href="http://jsfiddle.net/rich_harris/Hf2ea/">this JSFiddle</a>.</p>
+<pre class="prettyprint lang-js">flashTransition = function ( t, params ) {
+  var color, duration;
+
+  // Process parameters (second argument provides defaults)
+  params = t.processParams( params, {
+    duration: 400,
+    color: t.isIntro ? 'rgb(0,255,0)' : 'rgb(255,0,0)'
+  });
+
+  // Then, we execute the transition itself
+  t.setStyle( 'color', params.color );
+
+  // After the specified duration, call `t.complete()` to
+  // signal that we've finished
+  setTimeout( t.complete, params.duration );
+};</pre>
+
+<h2 id="registering-transitions">Registering transitions</h2>
+<p>Now that we&#39;ve made a transition, we need to make it available to Ractive. As with other plugins, we have a few options, depending on what we plan to do:</p>
+<pre class="prettyprint lang-js">// transition is available to all Ractive instances
+Ractive.transitions.flash = flashTransition;
+
+// transition is available to a single Ractive instance:
+ractive = new Ractive({
+  el: 'body',
+  template: template,
+  transitions: {
+    flash: flashTransition
+  }
+});
+
+// decorator is available to all instances of e.g. RactiveWithTransition:
+RactiveWithTransition = Ractive.extend({
+  transitions: {
+    flash: flashTransition
+  }
+});</pre>
+
+<h2 id="sharing-your-transitions">Sharing your transitions</h2>
+<p>If you create a transition that you find useful, other developers probably will too. Share it! An easy way to get started is to use the <a href="https://github.com/RactiveJS/Plugin-template">plugin template</a>, which uses <a href="http://gruntjs.com">Grunt</a> and walks you through the steps necessary to create a plugin with a demo page.</p>
+<p>Once you&#39;re ready to share it with the world, ping <a href="http://twitter.com/RactiveJS">@RactiveJS</a> on Twitter. Thanks!</p>
+</main>
+
+	
+	<script src="../js/prettify.js"></script>
+	<script>prettyPrint();
+
+		// Googlytics
+		(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+		ga('create', 'UA-5602942-6', 'ractivejs.org');
+		ga('send', 'pageview');</script></body></html>
